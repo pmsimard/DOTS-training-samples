@@ -1,13 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using UnityEditor;
+
 using UnityEngine;
 using Unity.Collections;
 using Unity.Mathematics;
-
+using Unity.Entities;
+using Unity.Transforms;
 
 public class MetroLine
 {
@@ -28,7 +26,7 @@ public class MetroLine
     public float carriageLength_onRail;
 
     public NativeArray<float3> BakedPositionPath;
-    public NativeArray<float3> BakedNormalsPath;
+    public NativeArray<float3> BakedNormalPath;
    
     public MetroLine(int metroLineIndex, int _maxTrains)
     {
@@ -131,7 +129,7 @@ public class MetroLine
         }
 
         BakedPositionPath = new NativeArray<float3>(pos.ToArray(), Allocator.Persistent);
-        BakedNormalsPath = new NativeArray<float3>(normals.ToArray(), Allocator.Persistent);
+        BakedNormalPath = new NativeArray<float3>(normals.ToArray(), Allocator.Persistent);
     }
 
 
@@ -173,5 +171,27 @@ public class MetroLine
     public float Get_proportionAsDistance(float _proportion)
     {
         return bezierPath.GetPathDistance() * _proportion;
+    }
+
+    public Entity Convert(Entity parentEntity, EntityManager dstManager, GameObjectConversionSystem conversionSystem,
+            GameObject parentGO, GameObject prefabRail)
+    {
+        var entity = dstManager.CreateEntity();
+        if (dstManager.AddComponent<MetroLineComponentData>(entity))
+        {
+            var comp = dstManager.GetComponentData<MetroLineComponentData>(entity);
+            //comp.RailPositions = BakedPositionPath;
+            //comp.RailNormals = BakedNormalPath;
+        }
+
+        for (int index = 0; index < BakedPositionPath.Length; ++index)
+        {
+            GameObject rail = (GameObject)GameObject.Instantiate(prefabRail);
+            rail.transform.parent = parentGO.transform;
+            rail.transform.position = BakedPositionPath[index];
+            rail.transform.LookAt(BakedPositionPath[index] - BakedNormalPath[index]);
+        }
+
+        return entity;
     }
 }

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Unity.Entities;
 
-public class Metro : MonoBehaviour
+public class Metro : MonoBehaviour, IConvertGameObjectToEntity
 {
     public static float CUSTOMER_SATISFACTION = 1f;
     public static float BEZIER_HANDLE_REACH = 0.1f;
@@ -88,14 +89,6 @@ public class Metro : MonoBehaviour
         return result;
     }
 
-    //move to convert
-    private void Start()
-    {
-        BEZIER_HANDLE_REACH = Bezier_HandleReach;
-        BEZIER_PLATFORM_OFFSET = Bezier_PlatformOffset;
-        SetupMetroLines();
-    }
-
     void SetupMetroLines()
     {
         totalLines = LineNames.Length;
@@ -145,7 +138,23 @@ public class Metro : MonoBehaviour
                     }
                 }
             }
+        }   
+    }
+
+    public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+    {
+        BEZIER_HANDLE_REACH = Bezier_HandleReach;
+        BEZIER_PLATFORM_OFFSET = Bezier_PlatformOffset;
+        SetupMetroLines();
+
+        //create rail lines
+        var parentGo = new GameObject("Metro");
+        for (int i = 0; i < metroLines.Length; i++)
+        {
+            var line = metroLines[i];
+            var lineEntity = line.Convert(entity, dstManager, conversionSystem, parentGo, prefab_rail);
         }
+
     }
 
     #endregion ------------------------ GIZMOS >
