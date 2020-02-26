@@ -58,7 +58,20 @@ public class Metro : MonoBehaviour
     [HideInInspector] public List<Commuter> commuters;
     [HideInInspector] private Platform[] allPlatforms;
 
-    
+    public static string GetLine_NAME_FromIndex(int _index)
+    {
+        string result = "";
+        INSTANCE = FindObjectOfType<Metro>();
+        if (INSTANCE != null)
+        {
+            if (INSTANCE.LineNames.Length - 1 >= _index)
+            {
+                result = INSTANCE.LineNames[_index];
+            }
+        }
+
+        return result;
+    }
 
     public static Color GetLine_COLOUR_FromIndex(int _index)
     {
@@ -75,6 +88,46 @@ public class Metro : MonoBehaviour
         return result;
     }
 
+    //move to convert
+    private void Start()
+    {
+        BEZIER_HANDLE_REACH = Bezier_HandleReach;
+        BEZIER_PLATFORM_OFFSET = Bezier_PlatformOffset;
+        SetupMetroLines();
+    }
+
+    void SetupMetroLines()
+    {
+        totalLines = LineNames.Length;
+        metroLines = new MetroLine[totalLines];
+        for (int i = 0; i < totalLines; i++)
+        {
+            // Find all of the relevant RailMarkers in the scene for this line
+            List<RailMarker> _relevantMarkers = FindObjectsOfType<RailMarker>().Where(m => m.metroLineID == i)
+                .OrderBy(m => m.pointIndex).ToList();
+
+            // Only continue if we have something to work with
+            if (_relevantMarkers.Count > 1)
+            {
+                MetroLine _newLine = new MetroLine(i, maxTrains[i]);
+                _newLine.Create_RailPath(_relevantMarkers);
+                metroLines[i] = _newLine;
+            }
+            else
+            {
+                Debug.LogWarning("Insufficient RailMarkers found for line: " + i +
+                                 ", you need to add the outbound points");
+            }
+        }
+
+        // now destroy all RailMarkers
+        foreach (RailMarker _RM in FindObjectsOfType<RailMarker>())
+        {
+            Destroy(_RM);
+        }
+
+    }
+
     #region ------------------------- < GIZMOS
 
     private void OnDrawGizmos()
@@ -86,17 +139,9 @@ public class Metro : MonoBehaviour
                 MetroLine _tempLine = metroLines[i];
                 if (_tempLine != null)
                 {
-                    BezierPath _path = _tempLine.bezierPath;
-                    if (_path != null)
+                    for (int index = 1; index < _tempLine.BakedPositionPath.Length; ++index)
                     {
-                        for (int pointIndex = 0; pointIndex < _path.points.Count; pointIndex++)
-                        {
-                            BezierPoint _CURRENT_POINT = _path.points[pointIndex];
-                            BezierPoint _NEXT_POINT = _path.points[(pointIndex + 1) % _path.points.Count];
-                            // Link them up
-                            Handles.DrawBezier(_CURRENT_POINT.location, _NEXT_POINT.location, _CURRENT_POINT.handle_out,
-                                _NEXT_POINT.handle_in, GetLine_COLOUR_FromIndex(i), null, 3f);
-                        }
+                        Handles.DrawLine(_tempLine.BakedPositionPath[index - 1], _tempLine.BakedPositionPath[index]);
                     }
                 }
             }
