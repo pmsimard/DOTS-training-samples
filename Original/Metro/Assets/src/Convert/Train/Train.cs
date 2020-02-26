@@ -3,19 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using UnityEngine;
 
-
-public enum TrainState
-{
-    EN_ROUTE,
-    ARRIVING,
-    DOORS_OPEN,
-    UNLOADING,
-    LOADING,
-    DOORS_CLOSE,
-    DEPARTING,
-    EMERGENCY_STOP
-}
-
 public class Train
 {
     public int trainIndex;
@@ -33,7 +20,6 @@ public class Train
     public float stateDelay = 0f;
     public int parentLineIndex;
     public bool isOutbound;
-    public TrainState state;
     public MetroLine parentLine;
     public Platform nextPlatform;
     public Train trainAheadOfMe;

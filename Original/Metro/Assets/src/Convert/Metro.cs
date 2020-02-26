@@ -152,9 +152,45 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
         for (int i = 0; i < metroLines.Length; i++)
         {
             var line = metroLines[i];
-            var lineEntity = line.Convert(entity, dstManager, conversionSystem, parentGo, prefab_rail);
+            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail);
+
+            for (int trainIndex = 0; trainIndex < 5; ++trainIndex)
+            {
+                //create train
+                ConvertTrain(lineEntity, dstManager, trainIndex);
+            }
+        }
+    }
+
+    void ConvertTrain(Entity railEntity, EntityManager dstManager, int trainIndex)
+    {
+        var trainEntity = dstManager.CreateEntity();
+        if (dstManager.AddComponent<TrainComponentData>(trainEntity))
+        {
+            var comp = dstManager.GetComponentData<TrainComponentData>(trainEntity);
+            comp.RailEntity = railEntity;
+            comp.DoorMoveTimer = Train_delay_doors_OPEN;
+            comp.WaitTimer = Train_delay_departure;
         }
 
+        if (dstManager.AddComponent<SpeedManagementData>(trainEntity))
+        {
+            var comp = dstManager.GetComponentData<SpeedManagementData>(trainEntity);
+            //Fill me
+
+        }
+
+        //wagons. We need to spawn the prefab...
+        for (int i = 0; i < 5; ++i)
+        {
+            var wagonEntity = dstManager.CreateEntity();
+            if (dstManager.AddComponent<WagonComponentData>(wagonEntity))
+            {
+                var comp = dstManager.GetComponentData<WagonComponentData>(wagonEntity);
+                comp.TrainEntity = trainEntity;
+                comp.Index = i;
+            }
+        }
     }
 
     #endregion ------------------------ GIZMOS >
