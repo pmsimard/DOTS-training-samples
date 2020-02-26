@@ -14,5 +14,4 @@ public struct SpeedManagementData : IComponentData
 
 public struct TargetReached : IComponentData
 {
-    public Entity TargetEntity;
 }

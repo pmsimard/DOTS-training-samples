@@ -34,8 +34,7 @@ public class MoveFreeSystem : JobComponentSystem
 
             if (distToTarget < speedManagementData.CurrentSpeed * DeltaTime)
             {
-                Entity entityCreated = ECB.CreateEntity(index);
-                ECB.AddComponent(index, entityCreated, new TargetReached() { TargetEntity = entity });
+                ECB.AddComponent(index, entity, new TargetReached() {});
             }
         }
     }

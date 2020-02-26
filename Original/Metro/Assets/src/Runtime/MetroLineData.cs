@@ -2,13 +2,8 @@
 using Unity.Collections;
 using Unity.Mathematics;
 
-public struct MetroLineBlobData
-{
-    public NativeArray<float3> RailPositions;
-    public NativeArray<float3> RailNormals;
-}
-
 public struct MetroLineComponentData : IComponentData
 {
-    public float zero;
+    public BlobAssetReference<float3> RailPositions;
+    public BlobAssetReference<float3> RailNormals;
 }
