@@ -35,8 +35,7 @@ public class MoveSnapSystem : JobComponentSystem
             if (distToTarget < speedManagementData.CurrentSpeed * DeltaTime)
             {
                 translation.Value = targetData.Target;
-                Entity entityCreated = ECB.CreateEntity(index);
-                ECB.AddComponent(index, entityCreated, new TargetReached() { TargetEntity = entity });
+                ECB.AddComponent(index, entity, new TargetReached() { });
             }
             else
             {
