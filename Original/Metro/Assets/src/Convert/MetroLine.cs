@@ -173,31 +173,23 @@ public class MetroLine
         return bezierPath.GetPathDistance() * _proportion;
     }
 
-    public Entity Convert(Entity parentEntity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+    public Entity Convert(Entity parentEntity, EntityManager dstManager, GameObjectConversionSystem conversionSystem,
+            GameObject parentGO, GameObject prefabRail)
     {
         var entity = dstManager.CreateEntity();
         if (dstManager.AddComponent<MetroLineComponentData>(entity))
         {
             var comp = dstManager.GetComponentData<MetroLineComponentData>(entity);
-            comp.RailPositions = BakedPositionPath;
-            comp.RailNormals = BakedNormalPath;
+            //comp.RailPositions = BakedPositionPath;
+            //comp.RailNormals = BakedNormalPath;
         }
 
-
-        var railPrefabEntity = dstManager.GetComponentData<RailLinePrefab>(parentEntity).Value;
         for (int index = 0; index < BakedPositionPath.Length; ++index)
         {
-            var railEntity = dstManager.Instantiate(railPrefabEntity);
-            var trans = dstManager.GetComponentData<Translation>(railEntity);
-            var rot = dstManager.GetComponentData<Rotation>(railEntity);
-
-            trans.Value = BakedPositionPath[index];
-            rot.Value = quaternion.LookRotation(BakedNormalPath[index], math.up());
-
-            //GameObject _RAIL = (GameObject) Metro.Instantiate(_M.prefab_rail);
-            //            _RAIL.GetComponent<Renderer>().material.color = lineColour;
-            //_RAIL.transform.position = _RAIL_POS;
-            //_RAIL.transform.LookAt(_RAIL_POS - _RAIL_ROT);
+            GameObject rail = (GameObject)GameObject.Instantiate(prefabRail);
+            rail.transform.parent = parentGO.transform;
+            rail.transform.position = BakedPositionPath[index];
+            rail.transform.LookAt(BakedPositionPath[index] - BakedNormalPath[index]);
         }
 
         return entity;
