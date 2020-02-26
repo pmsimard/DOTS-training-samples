@@ -173,6 +173,60 @@ public class MetroLine
         return bezierPath.GetPathDistance() * _proportion;
     }
 
+    /*public Entity Convert(Entity parentEntity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+    {
+        var railPrefabEntity = dstManager.GetComponentData<RailLinePrefab>(parentEntity).Value;
+        var entity = dstManager.CreateEntity();
+        if (dstManager.AddComponent<MetroLineComponentData>(entity))
+        {
+            var comp = dstManager.GetComponentData<MetroLineComponentData>(entity);
+
+            using (BlobBuilder builder = new BlobBuilder(Allocator.Persistent))
+            {
+                ref var railPositionsBlobArrayBuilder = ref builder.ConstructRoot<BlobArray<float3>>();
+                var railPositionsBlobArray = builder.Allocate(ref railPositionsBlobArrayBuilder, BakedPositionPath.Length);
+
+                ref var railNormalsBlobArrayBuilder = ref builder.ConstructRoot<BlobArray<float3>>();
+                var railNormalsBlobArray = builder.Allocate(ref railNormalsBlobArrayBuilder, BakedPositionPath.Length);
+
+                for (int i = 0; i < BakedPositionPath.Length; ++i)
+                {
+                    var railEntity = dstManager.Instantiate(railPrefabEntity);
+                    var trans = dstManager.GetComponentData<Translation>(railEntity);
+                    var rot = dstManager.GetComponentData<Rotation>(railEntity);
+
+                    trans.Value = BakedPositionPath[i];
+                    rot.Value = quaternion.LookRotation(BakedNormalPath[i], math.up());
+
+                    railPositionsBlobArray[i] = BakedPositionPath[i];
+                    railNormalsBlobArray[i] = BakedNormalPath[i];
+                }
+
+                comp.RailPositions = builder.CreateBlobAssetReference<float3>(Allocator.Persistent);
+                comp.RailNormals = builder.CreateBlobAssetReference<float3>(Allocator.Persistent);
+            }
+
+
+
+
+
+
+        }
+
+
+        for (int index = 0; index < BakedPositionPath.Length; ++index)
+        {
+            var railEntity = dstManager.Instantiate(railPrefabEntity);
+            var trans = dstManager.GetComponentData<Translation>(railEntity);
+            var rot = dstManager.GetComponentData<Rotation>(railEntity);
+
+            trans.Value = BakedPositionPath[index];
+            rot.Value = quaternion.LookRotation(BakedNormalPath[index], math.up());
+        }
+
+        return entity;
+    }*/
+
     public Entity Convert(Entity parentEntity, EntityManager dstManager, GameObjectConversionSystem conversionSystem,
             GameObject parentGO, GameObject prefabRail)
     {
@@ -180,17 +234,43 @@ public class MetroLine
         if (dstManager.AddComponent<MetroLineComponentData>(entity))
         {
             var comp = dstManager.GetComponentData<MetroLineComponentData>(entity);
-            //comp.RailPositions = BakedPositionPath;
-            //comp.RailNormals = BakedNormalPath;
+
+            using (BlobBuilder railPositionsBlobBuilder = new BlobBuilder(Allocator.Persistent))
+            using (BlobBuilder railNormalsBlobBuilder = new BlobBuilder(Allocator.Persistent))
+            {
+                ref var railPositionsBlobArrayBuilder = ref railPositionsBlobBuilder.ConstructRoot<BlobArray<float3>>();
+                var railPositionsBlobArray = railPositionsBlobBuilder.Allocate(ref railPositionsBlobArrayBuilder, BakedPositionPath.Length);
+
+                ref var railNormalsBlobArrayBuilder = ref railNormalsBlobBuilder.ConstructRoot<BlobArray<float3>>();
+                var railNormalsBlobArray = railNormalsBlobBuilder.Allocate(ref railNormalsBlobArrayBuilder, BakedPositionPath.Length);
+
+                for (int i = 0; i < BakedPositionPath.Length; ++i)
+                {
+                    GameObject rail = (GameObject)GameObject.Instantiate(prefabRail);
+                    rail.transform.parent = parentGO.transform;
+                    rail.transform.position = BakedPositionPath[i];
+                    rail.transform.LookAt(BakedPositionPath[i] - BakedNormalPath[i]);
+
+                    /*var railEntity = dstManager.Instantiate(railPrefabEntity);
+                    var trans = dstManager.GetComponentData<Translation>(railEntity);
+                    var rot = dstManager.GetComponentData<Rotation>(railEntity);
+
+                    trans.Value = BakedPositionPath[i];
+                    rot.Value = quaternion.LookRotation(BakedNormalPath[i], math.up());*/
+
+                    railPositionsBlobArray[i] = BakedPositionPath[i];
+                    railNormalsBlobArray[i] = BakedNormalPath[i];
+                }
+
+                comp.RailPositions = railPositionsBlobBuilder.CreateBlobAssetReference<float3>(Allocator.Persistent);
+                comp.RailNormals = railNormalsBlobBuilder.CreateBlobAssetReference<float3>(Allocator.Persistent);
+            }
         }
 
-        for (int index = 0; index < BakedPositionPath.Length; ++index)
+        /*for (int index = 0; index < BakedPositionPath.Length; ++index)
         {
-            GameObject rail = (GameObject)GameObject.Instantiate(prefabRail);
-            rail.transform.parent = parentGO.transform;
-            rail.transform.position = BakedPositionPath[index];
-            rail.transform.LookAt(BakedPositionPath[index] - BakedNormalPath[index]);
-        }
+            
+        }*/
 
         return entity;
     }
