@@ -17,6 +17,7 @@ public enum TrainState
 
 public struct TrainComponentData : IComponentData
 {
+    public Entity RailEntity;
     public TrainState State;
     public float WaitTimer;
     public float DoorMoveTimer;
