@@ -155,6 +155,30 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
             var lineEntity = line.Convert(entity, dstManager, conversionSystem, parentGo, prefab_rail);
         }
 
+        //create train
+        ConvertTrain(dstManager);
+    }
+
+    void ConvertTrain(EntityManager dstManager)
+    {
+        var trainEntity = dstManager.CreateEntity();
+        if (dstManager.AddComponent<TrainComponentData>(trainEntity))
+        {
+            var comp = dstManager.GetComponentData<TrainComponentData>(trainEntity);
+            comp.DoorMoveTimer = Train_delay_doors_OPEN;
+            comp.WaitTimer = Train_delay_departure;
+        }
+
+        for (int i = 0; i < 5; ++i)
+        {
+            var wagonEntity = dstManager.CreateEntity();
+            if (dstManager.AddComponent<WagonComponentData>(trainEntity))
+            {
+                var comp = dstManager.GetComponentData<WagonComponentData>(wagonEntity);
+                comp.TrainEntity = trainEntity;
+                comp.Index = i;
+            }
+        }
     }
 
     #endregion ------------------------ GIZMOS >
