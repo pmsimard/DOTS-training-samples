@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class Platform : MonoBehaviour
+public class Platform : MonoBehaviour, IConvertGameObjectToEntity
 {
     public int carriageCount, platformIndex;
     public MetroLine parentMetroLine;
