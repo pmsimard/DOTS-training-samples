@@ -227,7 +227,7 @@ public class MetroLine
         return entity;
     }*/
 
-    public Entity Convert(Entity parentEntity, EntityManager dstManager, GameObjectConversionSystem conversionSystem,
+    public Entity Convert(Entity parentEntity, EntityManager dstManager,
             GameObject parentGO, GameObject prefabRail)
     {
         var entity = dstManager.CreateEntity();

@@ -152,14 +152,17 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
         for (int i = 0; i < metroLines.Length; i++)
         {
             var line = metroLines[i];
-            var lineEntity = line.Convert(entity, dstManager, conversionSystem, parentGo, prefab_rail);
-        }
+            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail);
 
-        //create train
-        ConvertTrain(dstManager);
+            for (int trainIndex = 0; trainIndex < 5; ++trainIndex)
+            {
+                //create train
+                ConvertTrain(lineEntity, dstManager, trainIndex);
+            }
+        }
     }
 
-    void ConvertTrain(EntityManager dstManager)
+    void ConvertTrain(Entity lineEntity, EntityManager dstManager, int trainIndex)
     {
         var trainEntity = dstManager.CreateEntity();
         if (dstManager.AddComponent<TrainComponentData>(trainEntity))
@@ -169,6 +172,14 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
             comp.WaitTimer = Train_delay_departure;
         }
 
+        if (dstManager.AddComponent<SpeedManagementData>(trainEntity))
+        {
+            var comp = dstManager.GetComponentData<SpeedManagementData>(trainEntity);
+            //Fill me
+
+        }
+
+        //wagons. We need to spawn the prefab...
         for (int i = 0; i < 5; ++i)
         {
             var wagonEntity = dstManager.CreateEntity();
