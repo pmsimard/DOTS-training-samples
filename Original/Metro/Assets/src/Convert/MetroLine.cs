@@ -173,7 +173,7 @@ public class MetroLine
         return bezierPath.GetPathDistance() * _proportion;
     }
 
-    public Entity Convert(Entity parentEntity, EntityManager dstManager, GameObjectConversionSystem conversionSystem, 
+    public Entity Convert(Entity parentEntity, EntityManager dstManager,
             GameObject parentGO, GameObject prefabRail)
     {
         var entity = dstManager.CreateEntity();
