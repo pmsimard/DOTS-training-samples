@@ -38,7 +38,11 @@ public class MetroLine
 
     public void Create_RailPath(List<RailMarker> _outboundPoints)
     {
-        bezierPath = new BezierPath();
+        const float CARRIAGE_LENGTH = 5f;
+        const int CARRIAGE_CAPACITY = 10;
+        const float CARRIAGE_SPACING = 0.25f;
+
+    bezierPath = new BezierPath();
         List<BezierPoint> _POINTS = bezierPath.points;
         int total_outboundPoints = _outboundPoints.Count;
         Vector3 currentLocation = Vector3.zero;
@@ -98,8 +102,8 @@ public class MetroLine
         }
 
         bezierPath.MeasurePath();
-        carriageLength_onRail = Get_distanceAsRailProportion(TrainCarriage.CARRIAGE_LENGTH) +
-                                Get_distanceAsRailProportion(TrainCarriage.CARRIAGE_SPACING);
+        carriageLength_onRail = Get_distanceAsRailProportion(CARRIAGE_LENGTH) +
+                                Get_distanceAsRailProportion(CARRIAGE_SPACING);
 
         
 
@@ -198,6 +202,6 @@ public class MetroLine
                 new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
         }
 
-        return entity;
+        return parentEntity;
     }
 }
