@@ -1,8 +1,7 @@
 ﻿using Unity.Entities;
-using Unity.Collections;
 using Unity.Mathematics;
 
-[InternalBufferCapacity(8)]
+[InternalBufferCapacity(1024)]
 public struct MetroLinePositionElement : IBufferElementData
 {
     // Actual value each buffer element will store.
@@ -20,7 +19,7 @@ public struct MetroLinePositionElement : IBufferElementData
     }
 }
 
-[InternalBufferCapacity(8)]
+[InternalBufferCapacity(1024)]
 public struct MetroLineNormalElement : IBufferElementData
 {
     // Actual value each buffer element will store.

@@ -178,8 +178,6 @@ public class MetroLine
     {
         var entity = dstManager.CreateEntity();
 
-        // To Fred: Use EntityManager.GetBuffer<MetroLinePositionElement/MetroLineNormalElement>(metroEntity)
-        //          to access buffer data
         var metroLinePositions = dstManager.AddBuffer<MetroLinePositionElement>(entity);
         var metroLineNormals = dstManager.AddBuffer<MetroLineNormalElement>(entity);
 
