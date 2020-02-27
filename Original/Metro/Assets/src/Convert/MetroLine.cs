@@ -177,11 +177,9 @@ public class MetroLine
         return bezierPath.GetPathDistance() * _proportion;
     }
 
-    public Entity Convert(Entity parentEntity, EntityManager dstManager,
-            GameObject parentGO, GameObject prefabRail)
+    public Entity ConvertToEntity(EntityManager dstManager, GameObject prefabRail)
     {
-        var entity = dstManager.CreateEntity();     
-        var elemCount = BakedPositionPath.Length;
+        var entity = dstManager.CreateEntity();
 
         var metroLinePositions = dstManager.AddBuffer<MetroLinePositionElement>(entity);
         metroLinePositions.CopyFrom(BakedPositionPath);
@@ -191,7 +189,7 @@ public class MetroLine
         var conversionSettings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
         var railTrackPartPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(prefabRail, conversionSettings);
 
-        for (int i = 0; i < elemCount; ++i)
+        for (int i = 0; i < BakedPositionPath.Length; ++i)
         {
             var railTrackPartPrefabInstanceEntity = dstManager.Instantiate(railTrackPartPrefabEntity);
 
@@ -202,6 +200,6 @@ public class MetroLine
                 new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
         }
 
-        return parentEntity;
+        return entity;
     }
 }

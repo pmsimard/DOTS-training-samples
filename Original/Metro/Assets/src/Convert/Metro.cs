@@ -146,24 +146,14 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
         BEZIER_HANDLE_REACH = Bezier_HandleReach;
         BEZIER_PLATFORM_OFFSET = Bezier_PlatformOffset;
         SetupMetroLines();
-/*
-        //create rail lines
-        var parentGo = new GameObject("Metro");
-        for (int i = 0; i < metroLines.Length; i++)
-        {
-            var line = metroLines[i];
-            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail);
 
-            for (int trainIndex = 0; trainIndex < 5; ++trainIndex)
-            {
-                //create train
-                GenerateTrain(lineEntity, dstManager, trainIndex);
-            }
+        foreach (var line in metroLines)
+        {
+            line.ConvertToEntity(dstManager, prefab_rail);
         }
-        */
     }
 
-    void GenerateTrain(Entity railEntity, EntityManager dstManager, int trainIndex)
+    /*void GenerateTrain(Entity railEntity, EntityManager dstManager, int trainIndex)
     {
         
         var trainEntity = dstManager.CreateEntity();
@@ -193,7 +183,7 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
                 comp.Index = i;
             }
         }
-    }
+    }*/
 
     #endregion ------------------------ GIZMOS >
 }
