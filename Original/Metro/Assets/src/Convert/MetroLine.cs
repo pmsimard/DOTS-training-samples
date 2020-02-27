@@ -329,6 +329,22 @@ public class MetroLine
                 new Rotation { Value = quaternion.LookRotation(PlatformNormals[i], math.up()) });
         }
 
+
+        if (BakedPositionPath.IsCreated)
+        {
+            BakedPositionPath.Dispose();
+        }
+
+        if (BakedPositionPath.IsCreated)
+        {
+            BakedNormalPath.Dispose();
+        }
+
+        if (BakedPositionPath.IsCreated)
+        {
+            BakedAccelPath.Dispose();
+        }
+
         return entity;
     }
 }
