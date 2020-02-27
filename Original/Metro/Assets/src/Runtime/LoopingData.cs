@@ -8,5 +8,5 @@ using Unity.Mathematics;
 public struct LoopingData : IComponentData
 {
     public int PathIndex;
-    public int RailIndex;
+    public Entity RailEntity;
 }
