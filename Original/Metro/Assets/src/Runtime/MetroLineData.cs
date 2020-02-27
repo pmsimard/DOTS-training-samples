@@ -44,19 +44,19 @@ public struct MetroLineNormalElement : IBufferElementData
 // Zero size internal buffer array to immediately allocate in the RAM
 // as our track data is fairly large
 [InternalBufferCapacity(0)]
-public struct MetroLineAccelerationMultiplierElement : IBufferElementData
+public struct MetroLineAccelerationStateElement : IBufferElementData
 {
     // Actual value each buffer element will store.
-    public float Value;
+    public bool Value;
 
     // The following implicit conversions are optional, but can be convenient.
-    public static implicit operator float(MetroLineAccelerationMultiplierElement e)
+    public static implicit operator bool(MetroLineAccelerationStateElement e)
     {
         return e.Value;
     }
 
-    public static implicit operator MetroLineAccelerationMultiplierElement(float e)
+    public static implicit operator MetroLineAccelerationStateElement(bool e)
     {
-        return new MetroLineAccelerationMultiplierElement { Value = e };
+        return new MetroLineAccelerationStateElement { Value = e };
     }
 }

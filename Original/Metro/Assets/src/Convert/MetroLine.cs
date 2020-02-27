@@ -27,6 +27,7 @@ public class MetroLine
 
     public NativeArray<MetroLinePositionElement> BakedPositionPath;
     public NativeArray<MetroLineNormalElement> BakedNormalPath;
+    public NativeArray<MetroLineAccelerationStateElement> BakedAccelPath;
    
     public MetroLine(int metroLineIndex, int _maxTrains)
     {
@@ -102,11 +103,71 @@ public class MetroLine
         }
 
         bezierPath.MeasurePath();
+        int bezierPointIndex = 0;
+        var isPlatformPosition = new List<KeyValuePair<bool, float>>(bezierPath.points.Count);
+        for (int i = 0; i <= total_outboundPoints - 1; i++)
+        {
+            bool isPlatform = false;
+            if (_outboundPoints[i].railMarkerType == RailMarkerType.PLATFORM_END || _outboundPoints[i].railMarkerType == RailMarkerType.PLATFORM_START)
+            {
+                isPlatform = true;
+            }
+
+            isPlatformPosition.Add(new KeyValuePair<bool, float>(isPlatform, bezierPath.points[bezierPointIndex].distanceAlongPath));
+            bezierPointIndex++;
+        }
+
+        for (int i = total_outboundPoints - 1; i >= 0; i--)
+        {
+            bool isPlatform = false;
+            if (_outboundPoints[i].railMarkerType == RailMarkerType.PLATFORM_END || _outboundPoints[i].railMarkerType == RailMarkerType.PLATFORM_START)
+            {
+                isPlatform = true;
+            }
+
+            isPlatformPosition.Add(new KeyValuePair<bool, float>(isPlatform, bezierPath.points[bezierPointIndex].distanceAlongPath));
+            bezierPointIndex++;
+        }
+
         carriageLength_onRail = Get_distanceAsRailProportion(CARRIAGE_LENGTH) +
                                 Get_distanceAsRailProportion(CARRIAGE_SPACING);
 
-        
+        /*
+        // now that the rails have been laid - let's put the platforms on
+        int totalPoints = bezierPath.points.Count;
+        for (int i = 1; i < _outboundPoints.Count; i++)
+        {
+            int _plat_END = i;
+            int _plat_START = i - 1;
+            if (_outboundPoints[_plat_END].railMarkerType == RailMarkerType.PLATFORM_END &&
+                _outboundPoints[_plat_START].railMarkerType == RailMarkerType.PLATFORM_START)
+            {
+                Platform _ouboundPlatform = AddPlatform(_plat_START, _plat_END);
+                // now add an opposite platform!
+                int opposite_START = totalPoints - (i + 1);
+                int opposite_END = totalPoints - i;
+                Platform _oppositePlatform = AddPlatform(opposite_START, opposite_END);
+                _oppositePlatform.transform.eulerAngles =
+                    _ouboundPlatform.transform.rotation.eulerAngles + new Vector3(0f, 180f, 0f);
+                ;
 
+                // pair these platforms as opposites
+                _ouboundPlatform.PairWithOppositePlatform(_oppositePlatform);
+                _oppositePlatform.PairWithOppositePlatform(_ouboundPlatform);
+            }
+        }
+
+        var sortedPlatforms = from _PLATFORM in platforms
+                              orderby _PLATFORM.point_platform_START.index
+                              select _PLATFORM;
+        platforms = sortedPlatforms.ToList();
+        for (int i = 0; i < platforms.Count; i++)
+        {
+            Platform _P = platforms[i];
+            _P.platformIndex = i;
+            _P.nextPlatform = platforms[(i + 1) % platforms.Count];
+        }
+        */
         speedRatio = bezierPath.GetPathDistance() * maxTrainSpeed;
         
         // Now, let's lay the rail meshes
@@ -114,6 +175,13 @@ public class MetroLine
         Metro _M = Metro.INSTANCE;
         var pos = new List<MetroLinePositionElement>();
         var normals = new List<MetroLineNormalElement>();
+        var accelState = new List<MetroLineAccelerationStateElement>();
+
+        bool isAccel = true;
+        int pointIndex = 0;
+
+        float pointDistance = isPlatformPosition[pointIndex].Value;
+        bool atStation = isPlatformPosition[pointIndex].Key;
 
         while (_DIST < bezierPath.GetPathDistance())
         {
@@ -121,9 +189,27 @@ public class MetroLine
             Vector3 _RAIL_POS = Get_PositionOnRail(_DIST_AS_RAIL_FACTOR);
             Vector3 _RAIL_ROT = Get_RotationOnRail(_DIST_AS_RAIL_FACTOR);
 
+            if (_DIST >= pointDistance)
+            {
+                if (isAccel && atStation)
+                {
+                    isAccel = false;
+                }
+                else
+                {
+                    isAccel = true;
+                }
+
+                //Next target
+                pointIndex = (pointIndex + 1) % isPlatformPosition.Count;
+                atStation = isPlatformPosition[pointIndex].Key;
+                pointDistance = isPlatformPosition[pointIndex].Value;
+            }
+
             //convert
             pos.Add(new MetroLinePositionElement { Value = _RAIL_POS });
             normals.Add(new MetroLineNormalElement { Value = _RAIL_ROT });
+            accelState.Add(new MetroLineAccelerationStateElement { Value = isAccel });
 
             //GameObject _RAIL = (GameObject) Metro.Instantiate(_M.prefab_rail);
             //            _RAIL.GetComponent<Renderer>().material.color = lineColour;
@@ -134,6 +220,7 @@ public class MetroLine
 
         BakedPositionPath = new NativeArray<MetroLinePositionElement>(pos.ToArray(), Allocator.Persistent);
         BakedNormalPath = new NativeArray<MetroLineNormalElement>(normals.ToArray(), Allocator.Persistent);
+        BakedAccelPath = new NativeArray<MetroLineAccelerationStateElement>(accelState.ToArray(), Allocator.Persistent);
     }
 
 
@@ -177,19 +264,23 @@ public class MetroLine
         return bezierPath.GetPathDistance() * _proportion;
     }
 
-    public Entity ConvertToEntity(EntityManager dstManager, GameObject prefabRail)
+    public Entity Convert(Entity parentEntity, EntityManager dstManager,
+            GameObject parentGO, GameObject prefabRail)
     {
-        var entity = dstManager.CreateEntity();
+        var entity = dstManager.CreateEntity();     
+        var elemCount = BakedPositionPath.Length;
 
         var metroLinePositions = dstManager.AddBuffer<MetroLinePositionElement>(entity);
         metroLinePositions.CopyFrom(BakedPositionPath);
         var metroLineNormals = dstManager.AddBuffer<MetroLineNormalElement>(entity);
         metroLineNormals.CopyFrom(BakedNormalPath);
+        var metroLineAccelMults = dstManager.AddBuffer<MetroLineAccelerationStateElement>(entity);
+        metroLineAccelMults.CopyFrom(BakedAccelPath);
 
         var conversionSettings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
         var railTrackPartPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(prefabRail, conversionSettings);
 
-        for (int i = 0; i < BakedPositionPath.Length; ++i)
+        for (int i = 0; i < elemCount; ++i)
         {
             var railTrackPartPrefabInstanceEntity = dstManager.Instantiate(railTrackPartPrefabEntity);
 
@@ -200,6 +291,6 @@ public class MetroLine
                 new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
         }
 
-        return entity;
+        return parentEntity;
     }
 }
