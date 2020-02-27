@@ -233,7 +233,7 @@ public class MetroLine
             //convert
             pos.Add(new MetroLinePositionElement { Value = _RAIL_POS });
             normals.Add(new MetroLineNormalElement { Value = _RAIL_ROT });
-            accelState.Add(new MetroLineAccelerationStateElement { Value = isAccel });
+            accelState.Add(new MetroLineAccelerationStateElement { Value = isAccel ? 1.0f : -1.0f });
 
             //GameObject _RAIL = (GameObject) Metro.Instantiate(_M.prefab_rail);
             //            _RAIL.GetComponent<Renderer>().material.color = lineColour;
