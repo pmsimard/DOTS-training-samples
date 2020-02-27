@@ -31,6 +31,8 @@ public class MoveFreeSystem : JobComponentSystem
             float distToTarget = math.length(targetData.Target - translation.Value);
             float3 direction = math.normalize(vectorToTarget);
             translation.Value = translation.Value + direction * DeltaTime * speedManagementData.CurrentSpeed;
+            var lookRot = Unity.Mathematics.quaternion.LookRotation(direction, math.up());
+            rotation.Value = math.slerp(rotation.Value, lookRot, 0.5f);
 
             if (distToTarget < speedManagementData.CurrentSpeed * DeltaTime)
             {

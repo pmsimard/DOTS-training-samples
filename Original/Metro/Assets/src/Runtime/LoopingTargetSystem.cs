@@ -20,7 +20,9 @@ public class LoopingTarget : JobComponentSystem
     struct LoopingTargetJob : IJobForEach<Translation, SpeedManagementData, TargetData, LoopingData>
     {
         [ReadOnly] public float DeltaTime;
-        [ReadOnly] public BufferFromEntity<MetroLinePositionElement> MetroLine;
+        [ReadOnly] public BufferFromEntity<MetroLinePositionElement> MetroLinePosition;
+        [ReadOnly] public BufferFromEntity<MetroLineAccelerationStateElement> MetroLineAcceleration;
+        [ReadOnly] public BufferFromEntity<MetroLineNormalElement> MetroLineNormalElement;
 
         public void Execute([ReadOnly] ref Translation translation,
             [ReadOnly] ref SpeedManagementData speed,
@@ -28,7 +30,7 @@ public class LoopingTarget : JobComponentSystem
             ref LoopingData loopingData
             )
         {
-            DynamicBuffer<MetroLinePositionElement> targetPositions = MetroLine[loopingData.RailEntity];
+            DynamicBuffer<MetroLinePositionElement> targetPositions = MetroLinePosition[loopingData.RailEntity];
             
             float distance = 0f;
             
@@ -48,7 +50,7 @@ public class LoopingTarget : JobComponentSystem
         var job = new LoopingTargetJob()
         {
             DeltaTime = UnityEngine.Time.deltaTime,
-            MetroLine = GetBufferFromEntity<MetroLinePositionElement>()
+            MetroLinePosition = GetBufferFromEntity<MetroLinePositionElement>()
         };
 
         JobHandle jobHandle = job.Schedule(this, inputDependencies);
