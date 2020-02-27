@@ -19,10 +19,10 @@ public class LoopingTarget : JobComponentSystem
     [RequireComponentTag(typeof(TargetReached))]
     struct LoopingTargetJob : IJobForEach<Translation, SpeedManagementData, TargetData, LoopingData>
     {
-        [ReadOnly] public NativeArray<float3> RailPositions0;
-        [ReadOnly] public NativeArray<float3> RailPositions1;
-        [ReadOnly] public NativeArray<float3> RailPositions2;
-        [ReadOnly] public NativeArray<float3> RailPositions3;
+        [ReadOnly] public DynamicBuffer<MetroLinePositionElement> RailPositions0;
+        [ReadOnly] public DynamicBuffer<MetroLinePositionElement> RailPositions1;
+        [ReadOnly] public DynamicBuffer<MetroLinePositionElement> RailPositions2;
+        [ReadOnly] public DynamicBuffer<MetroLinePositionElement> RailPositions3;
 
         [ReadOnly] public float DeltaTime;
 
@@ -32,7 +32,7 @@ public class LoopingTarget : JobComponentSystem
             ref LoopingData loopingData
             )
         {
-            NativeArray<float3> targetPositions = RailPositions0;
+            DynamicBuffer<MetroLinePositionElement> targetPositions = RailPositions0;
             switch(loopingData.RailIndex)
             {
                 case 0:
@@ -62,33 +62,36 @@ public class LoopingTarget : JobComponentSystem
     
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
-        int nbPoint = 1000;
-        float radius = 20f;
-        float3[] points = new float3[nbPoint];
-        for (int i = 0; i < nbPoint; i++)
-        {
-            points[i].x = math.sin(2f * math.PI * i / nbPoint) * radius;
-            points[i].y = 0;
-            points[i].z = math.cos(2f * math.PI * i / nbPoint) * radius;
-        }
-
         var job = new LoopingTargetJob()
         {
-            RailPositions0 = new NativeArray<float3>(points, Allocator.TempJob),
-            RailPositions1 = new NativeArray<float3>(points, Allocator.TempJob),
-            RailPositions2 = new NativeArray<float3>(points, Allocator.TempJob),
-            RailPositions3 = new NativeArray<float3>(points, Allocator.TempJob),
             DeltaTime = UnityEngine.Time.deltaTime
         };
-        
+
+        /*
+        Entities.ForEach((Entity entity, ref MetroLine metroLine) =>
+        {
+            DynamicBuffer<MetroLinePositionElement> buff = EntityManager.GetBuffer<MetroLinePositionElement>(entity);
+            
+            switch (metroLine.RailIndex)
+            {
+                case 0:
+                    job.RailPositions0 = metroLine.RailPositions;
+                    break;
+                case 1:
+                    job.RailPositions1 = metroLine.RailPositions;
+                    break;
+                case 2:
+                    job.RailPositions2 = metroLine.RailPositions;
+                    break;
+                case 3:
+                    job.RailPositions3 = metroLine.RailPositions;
+                    break;
+            }
+         });*/
+
         JobHandle jobHandle = job.Schedule(this, inputDependencies);
 
         jobHandle.Complete();
-
-        job.RailPositions0.Dispose();
-        job.RailPositions1.Dispose();
-        job.RailPositions2.Dispose();
-        job.RailPositions3.Dispose();
 
         // Needs to happen after the job
         EntityQuery targetReachedQuery = GetEntityQuery(typeof(TargetReached));

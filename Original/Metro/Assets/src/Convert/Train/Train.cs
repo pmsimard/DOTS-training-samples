@@ -6,11 +6,7 @@ using UnityEngine;
 public class Train
 {
     public int trainIndex;
-    public List<TrainCarriage> carriages;
     public int totalCarriages;
-    public List<Commuter> passengers;
-    public List<Commuter> passengers_to_DISEMBARK;
-    public List<Commuter> passengers_to_EMBARK;
     public int passengerCountOnDeparture;
     private float currentPosition = 0f;
     private int currentRegion;

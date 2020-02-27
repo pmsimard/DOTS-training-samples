@@ -38,7 +38,11 @@ public class MetroLine
 
     public void Create_RailPath(List<RailMarker> _outboundPoints)
     {
-        bezierPath = new BezierPath();
+        const float CARRIAGE_LENGTH = 5f;
+        const int CARRIAGE_CAPACITY = 10;
+        const float CARRIAGE_SPACING = 0.25f;
+
+    bezierPath = new BezierPath();
         List<BezierPoint> _POINTS = bezierPath.points;
         int total_outboundPoints = _outboundPoints.Count;
         Vector3 currentLocation = Vector3.zero;
@@ -98,8 +102,8 @@ public class MetroLine
         }
 
         bezierPath.MeasurePath();
-        carriageLength_onRail = Get_distanceAsRailProportion(TrainCarriage.CARRIAGE_LENGTH) +
-                                Get_distanceAsRailProportion(TrainCarriage.CARRIAGE_SPACING);
+        carriageLength_onRail = Get_distanceAsRailProportion(CARRIAGE_LENGTH) +
+                                Get_distanceAsRailProportion(CARRIAGE_SPACING);
 
         
 
@@ -180,8 +184,8 @@ public class MetroLine
 
         // To Fred: Use EntityManager.GetBuffer<MetroLinePositionElement/MetroLineNormalElement>(metroEntity)
         //          to access buffer data
-        var metroLinePositions = dstManager.AddBuffer<MetroLinePositionElement>(entity);
-        var metroLineNormals = dstManager.AddBuffer<MetroLineNormalElement>(entity);
+        var metroLinePositions = dstManager.AddBuffer<MetroLinePositionElement>(parentEntity);
+        var metroLineNormals = dstManager.AddBuffer<MetroLineNormalElement>(parentEntity);
 
         for (int i = 0; i < BakedPositionPath.Length; ++i)
         {
@@ -194,6 +198,6 @@ public class MetroLine
             metroLineNormals[i] = BakedNormalPath[i];
         }
 
-        return entity;
+        return parentEntity;
     }
 }
