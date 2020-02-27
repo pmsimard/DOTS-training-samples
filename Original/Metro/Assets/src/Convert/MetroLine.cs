@@ -25,8 +25,8 @@ public class MetroLine
     public float speedRatio;
     public float carriageLength_onRail;
 
-    public NativeArray<float3> BakedPositionPath;
-    public NativeArray<float3> BakedNormalPath;
+    public NativeArray<MetroLinePositionElement> BakedPositionPath;
+    public NativeArray<MetroLineNormalElement> BakedNormalPath;
    
     public MetroLine(int metroLineIndex, int _maxTrains)
     {
@@ -108,8 +108,8 @@ public class MetroLine
         // Now, let's lay the rail meshes
         float _DIST = 0f;
         Metro _M = Metro.INSTANCE;
-        List<float3> pos = new List<float3>();
-        List<float3> normals = new List<float3>();
+        var pos = new List<MetroLinePositionElement>();
+        var normals = new List<MetroLineNormalElement>();
 
         while (_DIST < bezierPath.GetPathDistance())
         {
@@ -118,8 +118,8 @@ public class MetroLine
             Vector3 _RAIL_ROT = Get_RotationOnRail(_DIST_AS_RAIL_FACTOR);
 
             //convert
-            pos.Add(_RAIL_POS);
-            normals.Add(_RAIL_ROT);
+            pos.Add(new MetroLinePositionElement { Value = _RAIL_POS });
+            normals.Add(new MetroLineNormalElement { Value = _RAIL_ROT });
 
             //GameObject _RAIL = (GameObject) Metro.Instantiate(_M.prefab_rail);
             //            _RAIL.GetComponent<Renderer>().material.color = lineColour;
@@ -128,8 +128,8 @@ public class MetroLine
             _DIST += Metro.RAIL_SPACING;
         }
 
-        BakedPositionPath = new NativeArray<float3>(pos.ToArray(), Allocator.Persistent);
-        BakedNormalPath = new NativeArray<float3>(normals.ToArray(), Allocator.Persistent);
+        BakedPositionPath = new NativeArray<MetroLinePositionElement>(pos.ToArray(), Allocator.Persistent);
+        BakedNormalPath = new NativeArray<MetroLineNormalElement>(normals.ToArray(), Allocator.Persistent);
     }
 
 
@@ -180,9 +180,9 @@ public class MetroLine
         var elemCount = BakedPositionPath.Length;
 
         var metroLinePositions = dstManager.AddBuffer<MetroLinePositionElement>(entity);
-        metroLinePositions.EnsureCapacity(elemCount);
+        metroLinePositions.CopyFrom(BakedPositionPath);
         var metroLineNormals = dstManager.AddBuffer<MetroLineNormalElement>(entity);
-        metroLineNormals.EnsureCapacity(elemCount);
+        metroLineNormals.CopyFrom(BakedNormalPath);
 
         var conversionSettings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
         var railTrackPartPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(prefabRail, conversionSettings);
@@ -196,12 +196,6 @@ public class MetroLine
 
             dstManager.SetComponentData(railTrackPartPrefabEntity,
                 new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
-
-            metroLinePositions = dstManager.GetBuffer<MetroLinePositionElement>(entity);
-            metroLinePositions.Add(BakedPositionPath[i]);
-
-            metroLineNormals = dstManager.GetBuffer<MetroLineNormalElement>(entity);
-            metroLineNormals.Add(BakedNormalPath[i]);
         }
 
         return entity;

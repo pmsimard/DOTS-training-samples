@@ -134,7 +134,7 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
                 {
                     for (int index = 1; index < _tempLine.BakedPositionPath.Length; ++index)
                     {
-                        Handles.DrawLine(_tempLine.BakedPositionPath[index - 1], _tempLine.BakedPositionPath[index]);
+                        Handles.DrawLine(_tempLine.BakedPositionPath[index - 1].Value, _tempLine.BakedPositionPath[index].Value);
                     }
                 }
             }
