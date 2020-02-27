@@ -25,7 +25,7 @@ public class LoopingTarget : JobComponentSystem
         [ReadOnly] public BufferFromEntity<MetroLineNormalElement> MetroLineNormalElement;
 
         public void Execute([ReadOnly] ref Translation translation,
-            [ReadOnly] ref SpeedManagementData speed,
+            ref SpeedManagementData speed,
             ref TargetData target,
             ref LoopingData loopingData
             )
@@ -34,13 +34,13 @@ public class LoopingTarget : JobComponentSystem
             DynamicBuffer<MetroLineAccelerationStateElement> acceleration = MetroLineAcceleration[loopingData.RailEntity];
 
             float distance = 0f;
-            
+
             while (distance < speed.CurrentSpeed * DeltaTime)
             {
                 loopingData.PathIndex = (loopingData.PathIndex + 1) % targetPositions.Length;
                 target.Target = targetPositions[loopingData.PathIndex];
 
-                if(acceleration[loopingData.PathIndex].Value)
+                if (acceleration[loopingData.PathIndex].Value > 0)
                 {
                     speed.Acceleration = max(speed.Acceleration, -speed.Acceleration);
                 }

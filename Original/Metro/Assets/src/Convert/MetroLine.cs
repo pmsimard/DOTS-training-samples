@@ -328,7 +328,7 @@ public class MetroLine
             dstManager.SetComponentData(platformEntity,
                 new Rotation { Value = quaternion.LookRotation(PlatformNormals[i], math.up()) });
 
-            for (int j = 0; j < 1000; j++)
+            for (int j = 0; j < 100; j++)
             {
                 // 
                 var wagonEntity = dstManager.Instantiate(wagonPreabEntity);
