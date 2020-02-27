@@ -224,9 +224,12 @@ public class MetroLine
                 }
 
                 //Next target
-                pointIndex = (pointIndex + 1) % isPlatformPosition.Count;
-                atStation = isPlatformPosition[pointIndex].Key;
-                pointDistance = isPlatformPosition[pointIndex].Value;
+                pointIndex++;
+                if (pointIndex < isPlatformPosition.Count)
+                {
+                    atStation = isPlatformPosition[pointIndex].Key;
+                    pointDistance = isPlatformPosition[pointIndex].Value;
+                }
             }
 
             //convert
