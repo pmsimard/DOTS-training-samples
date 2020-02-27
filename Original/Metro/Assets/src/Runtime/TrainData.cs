@@ -5,22 +5,27 @@ using Unity.Entities;
 
 public enum TrainState
 {
-    Stopping,
-    PreOpenDoor,
+    Departing,
+    Arriving,
+    Stopped,
     OpeningDoors,
-    LeavingTrain,
-    EnteringTrain,
+    DoorsOpened,
     ClosingDoors,
-    PreLeaving,
-    Moving
+    DoorsClosed,
+    InTransit,
 }
 
 public struct TrainComponentData : IComponentData
 {
+    public const float WaitTimerInitialValue = 1.0f;
+    public const float DoorMoveTimerInitialValue = 1.0f;
+    public const float DoorOpenedTimerInitialValue = 5.0f;
+
     public Entity RailEntity;
     public TrainState State;
     public float WaitTimer;
     public float DoorMoveTimer;
+    public float DoorOpenedTimer;
 }
 
 public struct WagonComponentData : IComponentData
