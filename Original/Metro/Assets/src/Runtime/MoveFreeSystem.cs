@@ -15,7 +15,7 @@ public class MoveFreeSystem : JobComponentSystem
         m_endSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     [ExcludeComponent(typeof(SnapTag))]
     struct MoveFreeSystemJob : IJobForEachWithEntity<Translation, Rotation, SpeedManagementData, TargetData>
     {
@@ -32,7 +32,7 @@ public class MoveFreeSystem : JobComponentSystem
             float3 direction = math.normalize(vectorToTarget);
             translation.Value = translation.Value + direction * DeltaTime * speedManagementData.CurrentSpeed;
             var lookRot = Unity.Mathematics.quaternion.LookRotation(direction, math.up());
-            rotation.Value = math.slerp(rotation.Value, lookRot, 0.5f);
+            rotation.Value = math.slerp(rotation.Value, lookRot, 0.25f);
 
             if (distToTarget < speedManagementData.CurrentSpeed * DeltaTime)
             {

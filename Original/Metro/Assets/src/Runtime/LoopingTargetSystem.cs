@@ -15,7 +15,7 @@ public class LoopingTarget : JobComponentSystem
         m_endSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     [RequireComponentTag(typeof(TargetReached))]
     struct LoopingTargetJob : IJobForEach<Translation, SpeedManagementData, TargetData, LoopingData>
     {
@@ -31,13 +31,24 @@ public class LoopingTarget : JobComponentSystem
             )
         {
             DynamicBuffer<MetroLinePositionElement> targetPositions = MetroLinePosition[loopingData.RailEntity];
-            
+            DynamicBuffer<MetroLineAccelerationStateElement> acceleration = MetroLineAcceleration[loopingData.RailEntity];
+
             float distance = 0f;
             
             while (distance < speed.CurrentSpeed * DeltaTime)
             {
                 loopingData.PathIndex = (loopingData.PathIndex + 1) % targetPositions.Length;
                 target.Target = targetPositions[loopingData.PathIndex];
+
+                if(acceleration[loopingData.PathIndex].Value)
+                {
+                    speed.Acceleration = max(speed.Acceleration, -speed.Acceleration);
+                }
+                else
+                {
+                    speed.Acceleration = min(speed.Acceleration, -speed.Acceleration);
+                }
+                
                 distance = math.distance(target.Target, translation.Value);
             }
             
@@ -50,7 +61,8 @@ public class LoopingTarget : JobComponentSystem
         var job = new LoopingTargetJob()
         {
             DeltaTime = UnityEngine.Time.deltaTime,
-            MetroLinePosition = GetBufferFromEntity<MetroLinePositionElement>()
+            MetroLinePosition = GetBufferFromEntity<MetroLinePositionElement>(),
+            MetroLineAcceleration = GetBufferFromEntity<MetroLineAccelerationStateElement>(),
         };
 
         JobHandle jobHandle = job.Schedule(this, inputDependencies);
