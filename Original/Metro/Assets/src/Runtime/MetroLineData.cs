@@ -1,7 +1,9 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
 
-[InternalBufferCapacity(1024)]
+// Zero size internal buffer array to immediately allocate in the RAM
+// as our track data is fairly large
+[InternalBufferCapacity(0)]
 public struct MetroLinePositionElement : IBufferElementData
 {
     // Actual value each buffer element will store.
@@ -19,7 +21,9 @@ public struct MetroLinePositionElement : IBufferElementData
     }
 }
 
-[InternalBufferCapacity(1024)]
+// Zero size internal buffer array to immediately allocate in the RAM
+// as our track data is fairly large
+[InternalBufferCapacity(0)]
 public struct MetroLineNormalElement : IBufferElementData
 {
     // Actual value each buffer element will store.
