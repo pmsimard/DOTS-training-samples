@@ -146,13 +146,13 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
         BEZIER_HANDLE_REACH = Bezier_HandleReach;
         BEZIER_PLATFORM_OFFSET = Bezier_PlatformOffset;
         SetupMetroLines();
-/*
+
         //create rail lines
         var parentGo = new GameObject("Metro");
         for (int i = 0; i < metroLines.Length; i++)
         {
             var line = metroLines[i];
-            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail);
+            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail, prefab_platform);
 
             for (int trainIndex = 0; trainIndex < 5; ++trainIndex)
             {
@@ -160,7 +160,7 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
                 GenerateTrain(lineEntity, dstManager, trainIndex);
             }
         }
-        */
+        
     }
 
 

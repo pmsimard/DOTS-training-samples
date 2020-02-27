@@ -28,7 +28,12 @@ public class MetroLine
     public NativeArray<MetroLinePositionElement> BakedPositionPath;
     public NativeArray<MetroLineNormalElement> BakedNormalPath;
     public NativeArray<MetroLineAccelerationStateElement> BakedAccelPath;
-   
+
+    //platforms
+    public List<PlatformData> Platforms;
+    public List<float3> PlatformPositions;
+    public List<float3> PlatformNormals;
+
     public MetroLine(int metroLineIndex, int _maxTrains)
     {
         metroLine_index = metroLineIndex;
@@ -117,6 +122,7 @@ public class MetroLine
             bezierPointIndex++;
         }
 
+        
         for (int i = total_outboundPoints - 1; i >= 0; i--)
         {
             bool isPlatform = false;
@@ -183,6 +189,14 @@ public class MetroLine
         float pointDistance = isPlatformPosition[pointIndex].Value;
         bool atStation = isPlatformPosition[pointIndex].Key;
 
+        int platformIndex = -1;
+
+        Platforms = new List<PlatformData>(isPlatformPosition.Count);
+        PlatformPositions = new List<float3>(isPlatformPosition.Count);
+        PlatformNormals = new List<float3>(isPlatformPosition.Count);
+
+        Vector3 platformEndPos = Vector3.zero;
+
         while (_DIST < bezierPath.GetPathDistance())
         {
             float _DIST_AS_RAIL_FACTOR = Get_distanceAsRailProportion(_DIST);
@@ -194,9 +208,18 @@ public class MetroLine
                 if (isAccel && atStation)
                 {
                     isAccel = false;
+                    platformIndex++;
+                    platformEndPos = _RAIL_POS;
                 }
                 else
                 {
+                    if (!isAccel)
+                    {
+                        Platforms.Add(new PlatformData() { PlatformIndex = platformIndex, RailSampleIndex = pos.Count });
+                        PlatformPositions.Add(math.lerp(platformEndPos, _RAIL_POS, 0.5f));
+                        PlatformNormals.Add(math.normalize(platformEndPos - _RAIL_POS));
+                    }
+
                     isAccel = true;
                 }
 
@@ -265,7 +288,7 @@ public class MetroLine
     }
 
     public Entity Convert(Entity parentEntity, EntityManager dstManager,
-            GameObject parentGO, GameObject prefabRail)
+            GameObject parentGO, GameObject prefabRail, GameObject platformPrefab)
     {
         var entity = dstManager.CreateEntity();     
         var elemCount = BakedPositionPath.Length;
@@ -291,6 +314,21 @@ public class MetroLine
                 new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
         }
 
-        return parentEntity;
+        var platformPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(platformPrefab, conversionSettings);
+        for (int i = 0; i < Platforms.Count; ++i)
+        {
+            var platformEntity = dstManager.Instantiate(platformPrefabEntity);
+            var platformData = Platforms[i];
+            platformData.RailEntity = entity;
+
+            dstManager.AddComponentData(platformEntity, platformData);
+            dstManager.SetComponentData(platformEntity,
+                new Translation { Value = PlatformPositions[i] });
+
+            dstManager.SetComponentData(platformEntity,
+                new Rotation { Value = quaternion.LookRotation(PlatformNormals[i], math.up()) });
+        }
+
+        return entity;
     }
 }
