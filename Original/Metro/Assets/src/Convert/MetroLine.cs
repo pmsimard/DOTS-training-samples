@@ -180,22 +180,32 @@ public class MetroLine
     public Entity Convert(Entity parentEntity, EntityManager dstManager,
             GameObject parentGO, GameObject prefabRail)
     {
-        var entity = dstManager.CreateEntity();
+        var entity = dstManager.CreateEntity();     
+        var elemCount = BakedPositionPath.Length;
 
-        // To Fred: Use EntityManager.GetBuffer<MetroLinePositionElement/MetroLineNormalElement>(metroEntity)
-        //          to access buffer data
-        var metroLinePositions = dstManager.AddBuffer<MetroLinePositionElement>(parentEntity);
-        var metroLineNormals = dstManager.AddBuffer<MetroLineNormalElement>(parentEntity);
+        var metroLinePositions = dstManager.AddBuffer<MetroLinePositionElement>(entity);
+        metroLinePositions.EnsureCapacity(elemCount);
+        var metroLineNormals = dstManager.AddBuffer<MetroLineNormalElement>(entity);
+        metroLineNormals.EnsureCapacity(elemCount);
 
-        for (int i = 0; i < BakedPositionPath.Length; ++i)
+        var conversionSettings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
+        var railTrackPartPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(prefabRail, conversionSettings);
+
+        for (int i = 0; i < elemCount; ++i)
         {
-            GameObject rail = (GameObject)GameObject.Instantiate(prefabRail);
-            rail.transform.parent = parentGO.transform;
-            rail.transform.position = BakedPositionPath[i];
-            rail.transform.LookAt(BakedPositionPath[i] - BakedNormalPath[i]);
+            var railTrackPartPrefabInstanceEntity = dstManager.Instantiate(railTrackPartPrefabEntity);
 
-            metroLinePositions[i] = BakedPositionPath[i];
-            metroLineNormals[i] = BakedNormalPath[i];
+            dstManager.SetComponentData(railTrackPartPrefabInstanceEntity,
+                new Translation { Value = BakedPositionPath[i] });
+
+            dstManager.SetComponentData(railTrackPartPrefabEntity,
+                new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
+
+            metroLinePositions = dstManager.GetBuffer<MetroLinePositionElement>(entity);
+            metroLinePositions.Add(BakedPositionPath[i]);
+
+            metroLineNormals = dstManager.GetBuffer<MetroLineNormalElement>(entity);
+            metroLineNormals.Add(BakedNormalPath[i]);
         }
 
         return parentEntity;

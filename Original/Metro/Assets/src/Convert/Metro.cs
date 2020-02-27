@@ -157,13 +157,13 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
             for (int trainIndex = 0; trainIndex < 5; ++trainIndex)
             {
                 //create train
-                ConvertTrain(lineEntity, dstManager, trainIndex);
+                GenerateTrain(lineEntity, dstManager, trainIndex);
             }
         }
         */
     }
 
-    void ConvertTrain(Entity railEntity, EntityManager dstManager, int trainIndex)
+    void GenerateTrain(Entity railEntity, EntityManager dstManager, int trainIndex)
     {
         
         var trainEntity = dstManager.CreateEntity();
