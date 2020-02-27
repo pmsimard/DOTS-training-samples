@@ -338,8 +338,9 @@ public class MetroLine
                     new Rotation { Value = quaternion.LookRotation(BakedNormalPath[platformData.RailSampleIndex], math.up()) });
                 dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 30f, CurrentSpeed = 0, MaxSpeed = 300f });
                 dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = metroLine_index });
-                dstManager.AddComponentData(wagonEntity, new TargetData { Target = BakedPositionPath[platformData.RailSampleIndex + 1] });
-                dstManager.AddComponentData(wagonEntity, new LoopingData { RailEntity = entity, PathIndex = platformData.RailSampleIndex });
+                int position = (platformData.RailSampleIndex + 1 + j) % BakedPositionPath.Length;
+                dstManager.AddComponentData(wagonEntity, new TargetData { Target = BakedPositionPath[position] });
+                dstManager.AddComponentData(wagonEntity, new LoopingData { RailEntity = entity, PathIndex = position });
             }
         }
 
