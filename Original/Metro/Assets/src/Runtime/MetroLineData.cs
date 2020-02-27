@@ -47,15 +47,15 @@ public struct MetroLineNormalElement : IBufferElementData
 public struct MetroLineAccelerationStateElement : IBufferElementData
 {
     // Actual value each buffer element will store.
-    public bool Value;
+    public float Value;
 
     // The following implicit conversions are optional, but can be convenient.
-    public static implicit operator bool(MetroLineAccelerationStateElement e)
+    public static implicit operator float(MetroLineAccelerationStateElement e)
     {
         return e.Value;
     }
 
-    public static implicit operator MetroLineAccelerationStateElement(bool e)
+    public static implicit operator MetroLineAccelerationStateElement(float e)
     {
         return new MetroLineAccelerationStateElement { Value = e };
     }
