@@ -147,6 +147,7 @@ MonoBehaviour:
     type: 3}
   prefab_rail: {fileID: 1004504532206030, guid: 45c88b34fc7e54940a710ca1e3fcdee2,
     type: 3}
+  prefab_rail_accel: {fileID: 0}
   drawRailBeziers: 0
   maxCommuters: 1
   Bezier_HandleReach: 0.15
@@ -156,6 +157,8 @@ MonoBehaviour:
   Train_delay_doors_OPEN: 1
   Train_delay_doors_CLOSE: 1
   Train_delay_departure: 2
+  TrainPerPlatform: 1
+  WagonPerTrain: 5
   LineNames:
   - R
   - G

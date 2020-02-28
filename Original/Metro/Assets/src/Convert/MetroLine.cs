@@ -310,7 +310,7 @@ public class MetroLine
     }
 
     public Entity Convert(Entity parentEntity, EntityManager dstManager,
-            GameObject parentGO, GameObject prefabRail, GameObject prefabRailAccel, GameObject platformPrefab, GameObject wagonPrefab)
+            GameObject parentGO, GameObject prefabRail, GameObject prefabRailAccel, GameObject platformPrefab, GameObject wagonPrefab, int trainPerPlatform, int wagonPerTrain)
     {
         var railEntity = dstManager.CreateEntity();     
         var elemCount = BakedPositionPath.Length;
@@ -340,7 +340,7 @@ public class MetroLine
 
         var wagonPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(wagonPrefab, conversionSettings);
 
-        var trainCount = Platforms.Count;// 30;
+        var trainCount = Platforms.Count * trainPerPlatform;// 30;
         var sampleSpacing = (int) (BakedPositionPath.Length / (float)trainCount);
 
         var platformPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(platformPrefab, conversionSettings);
@@ -360,7 +360,7 @@ public class MetroLine
 
         for (int i = 0; i < trainCount; ++i)
         {
-            GenerateTrain(dstManager, railEntity, wagonPrefabEntity, 5, sampleSpacing * i);
+            GenerateTrain(dstManager, railEntity, wagonPrefabEntity, wagonPerTrain, sampleSpacing * i);
         }
 
         if (BakedPositionPath.IsCreated)

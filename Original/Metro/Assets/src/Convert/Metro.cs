@@ -49,6 +49,10 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
     [Tooltip("Doors have closed, wait (X seconds) before departing")]
     public float Train_delay_departure = 1f;
 
+    [Header("More Trains")]
+    public int TrainPerPlatform = 1;
+    public int WagonPerTrain = 5;
+
     [Header("Commuters")]
     // walk speed etc
     [Header("MetroLines")]
@@ -157,7 +161,7 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
         for (int i = 0; i < metroLines.Length; i++)
         {
             var line = metroLines[i];
-            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail, prefab_rail_accel, prefab_platform, prefab_trainCarriage);
+            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail, prefab_rail_accel, prefab_platform, prefab_trainCarriage, TrainPerPlatform, WagonPerTrain);
         }
 
         var conversionSettings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
