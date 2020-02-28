@@ -23,7 +23,7 @@ public class MetroLine
     public float speedRatio;
     public float carriageLength_onRail;
 
-    public float AverageSampleDistance = 0f; 
+    public float AverageSampleDistance = 1f; 
     public NativeArray<MetroLinePositionElement> BakedPositionPath;
     public NativeArray<MetroLineNormalElement> BakedNormalPath;
     public NativeArray<MetroLineAccelerationStateElement> BakedAccelPath;
@@ -195,7 +195,16 @@ public class MetroLine
         PlatformNormals = new List<float3>(isPlatformPosition.Count);
 
         float3 platformEndPos = float3.zero;
-        AverageSampleDistance = 0f;
+
+        float subStepSize = AverageSampleDistance / 4;
+
+        float3 lastPos = Get_PositionOnRail(0f);
+
+        pos.Add(new MetroLinePositionElement { Value = lastPos });
+        normals.Add(new MetroLineNormalElement { Value = Get_RotationOnRail(0f) });
+        accelState.Add(new MetroLineAccelerationStateElement { Value = 1.0f});
+
+        _DIST += subStepSize;
 
         while (_DIST < bezierPath.GetPathDistance())
         {
@@ -203,10 +212,18 @@ public class MetroLine
             float3 _RAIL_POS = Get_PositionOnRail(_DIST_AS_RAIL_FACTOR);
             float3 _RAIL_ROT = Get_RotationOnRail(_DIST_AS_RAIL_FACTOR);
 
-            if (pos.Count > 0)
+            _DIST += subStepSize;
+
+            float stepDistance = math.distance(_RAIL_POS, lastPos);
+            if (stepDistance < AverageSampleDistance)
             {
-                AverageSampleDistance += math.distance(pos[pos.Count - 1].Value, _RAIL_POS);
+                continue;
             }
+
+            _RAIL_POS = math.lerp(lastPos, _RAIL_POS, AverageSampleDistance / stepDistance);
+            //_DIST -= stepDistance - AverageSampleDistance;
+
+            lastPos = _RAIL_POS;
 
             if (_DIST >= pointDistance)
             {
@@ -246,10 +263,7 @@ public class MetroLine
             //            _RAIL.GetComponent<Renderer>().material.color = lineColour;
             //_RAIL.transform.position = _RAIL_POS;
             //_RAIL.transform.LookAt(_RAIL_POS - _RAIL_ROT);
-            _DIST += Metro.RAIL_SPACING;
         }
-
-        AverageSampleDistance /= pos.Count;
 
         BakedPositionPath = new NativeArray<MetroLinePositionElement>(pos.ToArray(), Allocator.Persistent);
         BakedNormalPath = new NativeArray<MetroLineNormalElement>(normals.ToArray(), Allocator.Persistent);
@@ -320,7 +334,7 @@ public class MetroLine
             dstManager.SetComponentData(railTrackPartPrefabInstanceEntity,
                 new Translation { Value = BakedPositionPath[i] });
 
-            dstManager.SetComponentData(railTrackPartPrefabEntity,
+            dstManager.SetComponentData(railTrackPartPrefabInstanceEntity,
                 new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
         }
 
