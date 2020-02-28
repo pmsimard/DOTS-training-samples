@@ -4,6 +4,9 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Unity.Entities;
+using Unity.Transforms;
+using Unity.Mathematics;
+using Unity.Collections;
 
 public class Metro : MonoBehaviour, IConvertGameObjectToEntity
 {
@@ -162,7 +165,53 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
                 //GenerateTrain(lineEntity, dstManager, trainIndex);
             }
         }
-        
+
+        var conversionSettings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
+
+        //commuters
+        var commuterPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(prefab_commuter, conversionSettings);
+        int skipSeats = 1; //50%
+        var seatQuery = dstManager.CreateEntityQuery(ComponentType.ReadOnly<NavPointCarriageSeatData>());
+        var seatEntities = seatQuery.ToEntityArray(Allocator.Persistent);
+        for (int i = 0; i < seatEntities.Length; i++)
+        {
+            var commuterEntity = dstManager.Instantiate(commuterPrefabEntity);
+
+            dstManager.AddComponentData(commuterEntity, new Parent() { Value = seatEntities[i] });
+            dstManager.AddComponentData(commuterEntity, new LocalToParent() { Value = float4x4.identity });
+
+            i += skipSeats;
+        }
+
+        seatEntities.Dispose();
+
+        int entityCountPerQueueMin = 1;
+        int entityCountPerQueueMax = 20;
+        float distancePerCommuter = 0.4f;
+        var queueQuery = dstManager.CreateEntityQuery(ComponentType.ReadOnly<NavPointQueueData>());
+        var queueEntities = queueQuery.ToEntityArray(Allocator.Persistent);
+        for (int i = 0; i < queueEntities.Length; i++)
+        {
+            var parent = dstManager.GetComponentData<Parent>(queueEntities[i]).Value;
+            var parentPos = dstManager.GetComponentData<Translation>(parent).Value;
+            var parentRot = dstManager.GetComponentData<Rotation>(parent).Value;
+            var localPos = dstManager.GetComponentData<Translation>(queueEntities[i]).Value;
+            var localRot = dstManager.GetComponentData<Rotation>(queueEntities[i]).Value;
+            var pos = math.mul(parentRot, localPos) + parentPos;
+            var rot = math.mul(parentRot, localRot);
+            var forward = math.mul(rot, Vector3.forward);
+            var deltaQueue = forward * distancePerCommuter;
+            
+            var count = UnityEngine.Random.Range(entityCountPerQueueMin, entityCountPerQueueMax);
+            for (int j = 0; j < count; ++j)
+            {
+                var commuterEntity = dstManager.Instantiate(commuterPrefabEntity);
+                dstManager.SetComponentData(commuterEntity, new Translation() { Value = pos + deltaQueue * j });
+            }
+            
+        }
+
+        queueEntities.Dispose();
     }
 
     #endregion ------------------------ GIZMOS >
