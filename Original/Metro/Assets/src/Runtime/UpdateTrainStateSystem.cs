@@ -5,8 +5,15 @@ using UnityEngine;
 
 public class UpdateTrainStateSystem : JobComponentSystem
 {
+    public EntityCommandBufferSystem m_endSimulationEntityCommandBufferSystem;
+
+    protected override void OnCreate()
+    {
+        m_endSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+    }
+
     //[BurstCompile]
-    struct LoopingTargetJob : IJobForEach<TrainComponentData, LoopingData, SpeedManagementData>
+    struct UpdateTrainStateJob : IJobForEach<TrainComponentData, LoopingData, SpeedManagementData>
     {
         [ReadOnly] public float DeltaTime;
         [ReadOnly] public BufferFromEntity<MetroLineAccelerationStateElement> MetroLinesAccelStateBuffers;
@@ -17,26 +24,35 @@ public class UpdateTrainStateSystem : JobComponentSystem
         [ReadOnly] ref SpeedManagementData speedData)
         {
             var dt = DeltaTime;
+            var prevAccelStateIndex = loopingData.PreviousPathIndex;
             var accelStateIndex = loopingData.PathIndex;
             var accelStatesBuffer = MetroLinesAccelStateBuffers[trainData.RailEntity];
-            var isAccellerating = accelStatesBuffer[accelStateIndex] == 1.0f;
+
+            bool wasAccellerating = accelStatesBuffer[prevAccelStateIndex] == 1.0f;
+            bool isDescellerating = accelStatesBuffer[accelStateIndex] == -1.0f;
 
 
             switch (trainData.State)
             {
                 case TrainState.InTransit:
                     {
-                        bool isAtMaxSpeed = speedData.CurrentSpeed == speedData.MaxSpeed;
-
-                        if (isAtMaxSpeed && !isAccellerating)
+                        if (wasAccellerating && isDescellerating)
+                        {
+                            Debug.Log("========== Going to Arriving");
                             trainData.State = TrainState.Arriving;
+                        }
                     }
                     break;
                 case TrainState.Arriving:
-                    // If we're arriving (decellarating) and we need to acccellarate
+                    // If we're arriving (descellarating) and we need to accellarate
                     // it means we need to stop first
-                    if (isAccellerating)
+                    if (!wasAccellerating && !isDescellerating)
+                    {
+                        Debug.Log("========== Going to a Stop");
+                        speedData.CurrentSpeed = 0.0f;
+                        speedData.MaxSpeed = 0.0f;
                         trainData.State = TrainState.Stopped;
+                    }
                     break;
                 case TrainState.Stopped:
                     // Delay train arrival
@@ -44,8 +60,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     if (trainData.WaitTimer <= 0.0f)
                     {
                         trainData.WaitTimer = TrainComponentData.WaitTimerInitialValue;
-                        trainData.State = TrainState.InTransit;
-                        //speedData.CurrentSpeed = 0;
+                        trainData.State = TrainState.OpeningDoors;
                     }
                     break;
                 case TrainState.OpeningDoors:
@@ -72,7 +87,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     if (trainData.DoorMoveTimer <= 0.0f)
                     {
                         trainData.DoorMoveTimer = TrainComponentData.DoorMoveTimerInitialValue;
-                        trainData.State = TrainState.InTransit;
+                        trainData.State = TrainState.DoorsClosed;
                     }
                     break;
                 case TrainState.DoorsClosed:
@@ -80,7 +95,9 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     trainData.WaitTimer -= dt;
                     if (trainData.WaitTimer <= 0.0f)
                     {
+                        Debug.Log($"========== Train is Departing with accellaration {speedData.Acceleration}");
                         trainData.WaitTimer = TrainComponentData.WaitTimerInitialValue;
+                        speedData.MaxSpeed = SpeedManagementData.DefaultMaxSpeed;
                         trainData.State = TrainState.InTransit;
                     }
                     break;
@@ -89,26 +106,42 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     break;
             }
         }
-
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
-        var job = new LoopingTargetJob()
+        var job = new UpdateTrainStateJob()
         {
             DeltaTime = UnityEngine.Time.deltaTime,
             MetroLinesAccelStateBuffers = GetBufferFromEntity<MetroLineAccelerationStateElement>()
         };
 
         JobHandle jobHandle = job.Schedule(this, inputDependencies);
-        jobHandle.Complete();
+
+        var allTrainsSpeedData = GetComponentDataFromEntity<SpeedManagementData>();
+
+        var updateWagonSpeedJobHandle =
+            Entities
+            .WithNone<TrainComponentData>()
+            .WithNativeDisableParallelForRestriction(allTrainsSpeedData)
+            .ForEach((Entity entity, ref WagonComponentData wagonData) => {
+                if (wagonData.TrainEntity != entity)
+                {
+                    var trainSpeedData = allTrainsSpeedData[wagonData.TrainEntity];
+                    var speedData = allTrainsSpeedData[entity];
+                    speedData.Acceleration = trainSpeedData.Acceleration;
+                    speedData.CurrentSpeed = trainSpeedData.CurrentSpeed;
+                    speedData.MaxSpeed = trainSpeedData.MaxSpeed;
+                    allTrainsSpeedData[entity] = speedData;
+                }
+            }).Schedule(jobHandle);
 
         // Needs to happen after the job
         EntityQuery targetReachedQuery = GetEntityQuery(typeof(TargetReached));
         EntityManager.RemoveComponent<TargetReached>(targetReachedQuery);
 
         // Now that the job is set up, schedule it to be run. 
-        return jobHandle;
+        return updateWagonSpeedJobHandle;
 
     }
 }

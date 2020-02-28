@@ -37,16 +37,20 @@ public class LoopingTarget : JobComponentSystem
 
             while (distance < speed.CurrentSpeed * DeltaTime)
             {
+                loopingData.PreviousPathIndex = loopingData.PathIndex;
                 loopingData.PathIndex = (loopingData.PathIndex + 1) % targetPositions.Length;
                 target.Target = targetPositions[loopingData.PathIndex];
 
-                if (acceleration[loopingData.PathIndex].Value > 0)
+                if (speed.NeedsAccelleration)
                 {
-                    speed.Acceleration = max(speed.Acceleration, -speed.Acceleration);
-                }
-                else
-                {
-                    speed.Acceleration = min(speed.Acceleration, -speed.Acceleration);
+                    if (acceleration[loopingData.PathIndex].Value > 0)
+                    {
+                        speed.Acceleration = max(speed.Acceleration, -speed.Acceleration);
+                    }
+                    else
+                    {
+                        speed.Acceleration = min(speed.Acceleration, -speed.Acceleration);
+                    }
                 }
                 
                 distance = math.distance(target.Target, translation.Value);

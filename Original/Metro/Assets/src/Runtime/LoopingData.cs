@@ -7,6 +7,7 @@ using Unity.Mathematics;
 [GenerateAuthoringComponent]
 public struct LoopingData : IComponentData
 {
+    public int PreviousPathIndex;
     public int PathIndex;
     public Entity RailEntity;
 }

@@ -399,16 +399,21 @@ public class MetroLine
 
         int wagonSampleIndexSpacing = (int)((5f / AverageSampleDistance) + 0.5f);
         var wagonEntities = new List<Entity>(desiredWagonCount);
+        var railEntity = platformData.RailEntity;
+        Entity locomotiveEntity = Entity.Null;
 
         // Spawn train wagons
         for (int j = 0; j < desiredWagonCount; ++j)
         {
+            bool isLocomotive = j == 0;
             var wagonEntity = dstManager.Instantiate(wagonPrefabEntity);
             wagonEntities.Add(wagonEntity);
 
             // Only on locomotive (first wagon) do we attach TrainComponentData
-            if (j == 0)
+            if (isLocomotive)
             {
+                locomotiveEntity = wagonEntity;
+
                 var trainData = new TrainComponentData
                 {
                     State = TrainState.InTransit,
@@ -433,7 +438,7 @@ public class MetroLine
 
             dstManager.SetComponentData(wagonEntity, new Translation { Value = BakedPositionPath[position-1] });
             dstManager.SetComponentData(wagonEntity, new Rotation { Value = quaternion.LookRotation(BakedNormalPath[position], math.up()) });
-            dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 10f, CurrentSpeed = 0, MaxSpeed = 21f });
+            dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 10f, CurrentSpeed = 0, MaxSpeed = SpeedManagementData.DefaultMaxSpeed });
             dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = j });
 
             dstManager.AddComponentData(wagonEntity, new TargetData { Target = BakedPositionPath[position] });
