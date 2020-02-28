@@ -340,6 +340,9 @@ public class MetroLine
 
         var wagonPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(wagonPrefab, conversionSettings);
 
+        var trainCount = Platforms.Count;// 30;
+        var sampleSpacing = (int) (BakedPositionPath.Length / (float)trainCount);
+
         var platformPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(platformPrefab, conversionSettings);
         for (int i = 0; i < Platforms.Count; ++i)
         {
@@ -353,8 +356,11 @@ public class MetroLine
 
             dstManager.SetComponentData(platformEntity,
                 new Rotation { Value = quaternion.LookRotation(PlatformNormals[i], math.up()) });
+        }
 
-            GenerateTrain(dstManager, platformData, wagonPrefabEntity, desiredWagonCount: 5);
+        for (int i = 0; i < trainCount; ++i)
+        {
+            GenerateTrain(dstManager, railEntity, wagonPrefabEntity, 5, sampleSpacing * i);
         }
 
         if (BakedPositionPath.IsCreated)
@@ -383,8 +389,8 @@ public class MetroLine
     /// <param name="wagonPrefabEntity">The prefab entity used for spawning wagons</param>
     /// <param name="desiredWagonCount">The desired number of wagons for this train (must be > 0)</param>
     /// <returns>th</returns>
-    List<Entity> GenerateTrain(EntityManager dstManager, PlatformData platformData,
-        Entity wagonPrefabEntity, int desiredWagonCount)
+    List<Entity> GenerateTrain(EntityManager dstManager, Entity railEntity,
+        Entity wagonPrefabEntity, int desiredWagonCount, int spawnRailSampleIndex)
     {
         if (desiredWagonCount <= 0)
         {
@@ -393,7 +399,6 @@ public class MetroLine
 
         int wagonSampleIndexSpacing = (int)((5f / AverageSampleDistance) + 0.5f);
         var wagonEntities = new List<Entity>(desiredWagonCount);
-        var railEntity = platformData.RailEntity;       
 
         // Spawn train wagons
         for (int j = 0; j < desiredWagonCount; ++j)
@@ -415,11 +420,20 @@ public class MetroLine
                 dstManager.AddComponentData(wagonEntity, trainData);
             }
                 
-            int position = (platformData.RailSampleIndex + wagonSampleIndexSpacing * j) % BakedPositionPath.Length;
+            int position = (1 + spawnRailSampleIndex - wagonSampleIndexSpacing * j) % BakedPositionPath.Length;
+            if (position < 0)
+            {
+                position += BakedPositionPath.Length;
+            }
+
+            if (position == 0)
+            {
+                position++;
+            }
 
             dstManager.SetComponentData(wagonEntity, new Translation { Value = BakedPositionPath[position-1] });
             dstManager.SetComponentData(wagonEntity, new Rotation { Value = quaternion.LookRotation(BakedNormalPath[position], math.up()) });
-            dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 30f, CurrentSpeed = 0, MaxSpeed = 300f });
+            dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 10f, CurrentSpeed = 0, MaxSpeed = 21f });
             dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = j });
 
             dstManager.AddComponentData(wagonEntity, new TargetData { Target = BakedPositionPath[position] });

@@ -158,19 +158,13 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
         {
             var line = metroLines[i];
             var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail, prefab_rail_accel, prefab_platform, prefab_trainCarriage);
-
-            for (int trainIndex = 0; trainIndex < 5; ++trainIndex)
-            {
-                //create train
-                //GenerateTrain(lineEntity, dstManager, trainIndex);
-            }
         }
 
         var conversionSettings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
 
         //commuters
         var commuterPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(prefab_commuter, conversionSettings);
-        int skipSeats = 1; //50%
+        int skipSeats = 1; // 50%
         var seatQuery = dstManager.CreateEntityQuery(ComponentType.ReadOnly<NavPointCarriageSeatData>());
         var seatEntities = seatQuery.ToEntityArray(Allocator.Persistent);
         for (int i = 0; i < seatEntities.Length; i++)
@@ -184,6 +178,7 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
         }
 
         seatEntities.Dispose();
+
 
         int entityCountPerQueueMin = 1;
         int entityCountPerQueueMax = 20;
