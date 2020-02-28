@@ -5,6 +5,13 @@ using UnityEngine;
 
 public class UpdateTrainStateSystem : JobComponentSystem
 {
+    public EntityCommandBufferSystem m_endSimulationEntityCommandBufferSystem;
+
+    protected override void OnCreate()
+    {
+        m_endSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+    }
+
     //[BurstCompile]
     struct UpdateTrainStateJob : IJobForEach<TrainComponentData, LoopingData, SpeedManagementData>
     {
@@ -101,10 +108,6 @@ public class UpdateTrainStateSystem : JobComponentSystem
         }
     }
 
-    struct UpdateEntireTrainSpeedJob : IJobForEach<TrainComponentData, LoopingData, SpeedManagementData>
-    {
-    }
-
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
         var job = new UpdateTrainStateJob()
@@ -114,25 +117,31 @@ public class UpdateTrainStateSystem : JobComponentSystem
         };
 
         JobHandle jobHandle = job.Schedule(this, inputDependencies);
-        jobHandle.Complete();
 
-        var allTrainsSpeedData = GetComponentDataFromEntity<SpeedManagementData>(isReadOnly: true);
+        var allTrainsSpeedData = GetComponentDataFromEntity<SpeedManagementData>();
 
-        Entities
+        var updateWagonSpeedJobHandle =
+            Entities
             .WithNone<TrainComponentData>()
-            .WithReadOnly(allTrainsSpeedData)
-            .ForEach((ref WagonComponentData wagonData, ref SpeedManagementData speedData) => {
-                var trainSpeedData = allTrainsSpeedData[wagonData.TrainEntity];
-                speedData.CurrentSpeed = trainSpeedData.CurrentSpeed;
-                speedData.MaxSpeed = trainSpeedData.MaxSpeed;
-            });
+            .WithNativeDisableParallelForRestriction(allTrainsSpeedData)
+            .ForEach((Entity entity, ref WagonComponentData wagonData) => {
+                if (wagonData.TrainEntity != entity)
+                {
+                    var trainSpeedData = allTrainsSpeedData[wagonData.TrainEntity];
+                    var speedData = allTrainsSpeedData[entity];
+                    speedData.Acceleration = trainSpeedData.Acceleration;
+                    speedData.CurrentSpeed = trainSpeedData.CurrentSpeed;
+                    speedData.MaxSpeed = trainSpeedData.MaxSpeed;
+                    allTrainsSpeedData[entity] = speedData;
+                }
+            }).Schedule(jobHandle);
 
         // Needs to happen after the job
         EntityQuery targetReachedQuery = GetEntityQuery(typeof(TargetReached));
         EntityManager.RemoveComponent<TargetReached>(targetReachedQuery);
 
         // Now that the job is set up, schedule it to be run. 
-        return jobHandle;
+        return updateWagonSpeedJobHandle;
 
     }
 }

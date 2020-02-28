@@ -12,6 +12,7 @@ public struct SpeedManagementData : IComponentData
     public float MaxSpeed;
     public float CurrentSpeed;
     public float Acceleration;
+    public bool NeedsAccelleration;
 }
 
 public struct TargetReached : IComponentData
