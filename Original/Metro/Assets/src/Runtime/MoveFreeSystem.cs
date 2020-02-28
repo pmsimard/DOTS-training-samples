@@ -25,7 +25,7 @@ public class MoveFreeSystem : JobComponentSystem
         public void Execute(Entity entity, int index, ref Translation translation, ref Rotation rotation, ref SpeedManagementData speedManagementData, [ReadOnly] ref TargetData targetData)
         {
             speedManagementData.CurrentSpeed = speedManagementData.Acceleration * DeltaTime + speedManagementData.CurrentSpeed;
-            speedManagementData.CurrentSpeed = max(min(speedManagementData.MaxSpeed, speedManagementData.CurrentSpeed), 1.0f);
+            speedManagementData.CurrentSpeed = max(min(speedManagementData.MaxSpeed, speedManagementData.CurrentSpeed), speedManagementData.MinSpeed);
 
             float3 vectorToTarget = targetData.Target - translation.Value;
             float distToTarget = math.length(targetData.Target - translation.Value);
