@@ -31,14 +31,12 @@ public class UpdateTrainStateSystem : JobComponentSystem
             bool wasAccellerating = accelStatesBuffer[prevAccelStateIndex] == 1.0f;
             bool isDescellerating = accelStatesBuffer[accelStateIndex] == -1.0f;
 
-
             switch (trainData.State)
             {
                 case TrainState.InTransit:
                     {
                         if (wasAccellerating && isDescellerating)
                         {
-                            Debug.Log($"========== Going to Arriving");
                             speedData.MinSpeed = 5.0f;
                             trainData.State = TrainState.Arriving;
                         }
@@ -49,7 +47,6 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     // it means we need to stop first
                     if (!wasAccellerating && !isDescellerating)
                     {
-                        Debug.Log("========== Going to a Stop");
                         speedData.CurrentSpeed = 0.0f;
                         speedData.MinSpeed = 0.0f;
                         speedData.MaxSpeed = 0.0f;
@@ -59,7 +56,6 @@ public class UpdateTrainStateSystem : JobComponentSystem
                 case TrainState.Stopped:
                     // Delay train arrival
                     trainData.WaitTimer -= dt;
-                    Debug.Log($"========== Waiting speed: {speedData.CurrentSpeed}");
                     if (trainData.WaitTimer <= 0.0f)
                     {
                         trainData.WaitTimer = TrainComponentData.WaitTimerInitialValue;
@@ -98,7 +94,6 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     trainData.WaitTimer -= dt;
                     if (trainData.WaitTimer <= 0.0f)
                     {
-                        Debug.Log($"========== Train is Departing with accellaration {speedData.Acceleration}");
                         trainData.WaitTimer = TrainComponentData.WaitTimerInitialValue;
                         speedData.MaxSpeed = SpeedManagementData.DefaultMaxSpeed;
                         trainData.State = TrainState.InTransit;
