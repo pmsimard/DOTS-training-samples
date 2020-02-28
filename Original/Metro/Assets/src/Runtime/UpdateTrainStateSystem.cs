@@ -11,7 +11,8 @@ public class UpdateTrainStateSystem : JobComponentSystem
         [ReadOnly] public float DeltaTime;
         [ReadOnly] public BufferFromEntity<MetroLineAccelerationStateElement> MetroLinesAccelStateBuffers;
 
-        public void Execute(ref TrainComponentData trainData,
+        public void Execute(
+                   ref TrainComponentData trainData,
         [ReadOnly] ref LoopingData loopingData,
         [ReadOnly] ref SpeedManagementData speedData)
         {
@@ -19,6 +20,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
             var accelStateIndex = loopingData.PathIndex;
             var accelStatesBuffer = MetroLinesAccelStateBuffers[trainData.RailEntity];
             var isAccellerating = accelStatesBuffer[accelStateIndex] == 1.0f;
+
 
             switch (trainData.State)
             {
@@ -28,8 +30,6 @@ public class UpdateTrainStateSystem : JobComponentSystem
 
                         if (isAtMaxSpeed && !isAccellerating)
                             trainData.State = TrainState.Arriving;
-                        else if (isAtMaxSpeed && isAccellerating)
-                            trainData.State = TrainState.Departing;
                     }
                     break;
                 case TrainState.Arriving:
@@ -72,7 +72,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     if (trainData.DoorMoveTimer <= 0.0f)
                     {
                         trainData.DoorMoveTimer = TrainComponentData.DoorMoveTimerInitialValue;
-                        trainData.State = TrainState.Departing;
+                        trainData.State = TrainState.InTransit;
                     }
                     break;
                 case TrainState.DoorsClosed:
