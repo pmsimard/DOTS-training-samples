@@ -26,7 +26,7 @@ public class TrainCarriageSpawner : JobComponentSystem
         // The actual job will be cached once it is compiled (it will only get Burst compiled once).
         JobHandle handle = Entities.ForEach((Entity entity, int entityInQueryIndex, ref TrainCarriageSpawnerData spawnerFromEntity, ref LocalToWorld location) =>
         {
-            for (int i = 0; i < spawnerFromEntity.WagonPerLine; i++)
+            /*for (int i = 0; i < spawnerFromEntity.WagonPerLine; i++)
             {
                 Entity instance = commandBuffer.Instantiate(entityInQueryIndex, spawnerFromEntity.Prefab);
 
@@ -35,7 +35,7 @@ public class TrainCarriageSpawner : JobComponentSystem
                 commandBuffer.AddComponent(entityInQueryIndex, instance, new WagonComponentData { Index = 0 });
             }
             commandBuffer.DestroyEntity(entityInQueryIndex, entity);
-            
+            */
         }).WithBurst().Schedule(inputDeps);
 
         // SpawnJob runs in parallel with no sync point until the barrier system executes.
