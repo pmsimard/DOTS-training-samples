@@ -157,43 +157,10 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
             for (int trainIndex = 0; trainIndex < 5; ++trainIndex)
             {
                 //create train
-                GenerateTrain(lineEntity, dstManager, trainIndex);
+                //GenerateTrain(lineEntity, dstManager, trainIndex);
             }
         }
         
-    }
-
-
-    void GenerateTrain(Entity railEntity, EntityManager dstManager, int trainIndex)
-    {
-        
-        var trainEntity = dstManager.CreateEntity();
-        if (dstManager.AddComponent<TrainComponentData>(trainEntity))
-        {
-            var comp = dstManager.GetComponentData<TrainComponentData>(trainEntity);
-            comp.RailEntity = railEntity;
-            comp.DoorMoveTimer = Train_delay_doors_OPEN;
-            comp.WaitTimer = Train_delay_departure;
-        }
-
-        if (dstManager.AddComponent<SpeedManagementData>(trainEntity))
-        {
-            var comp = dstManager.GetComponentData<SpeedManagementData>(trainEntity);
-            //Fill me
-
-        }
-
-        //wagons. We need to spawn the prefab...
-        for (int i = 0; i < 5; ++i)
-        {
-            var wagonEntity = dstManager.CreateEntity();
-            if (dstManager.AddComponent<WagonComponentData>(wagonEntity))
-            {
-                var comp = dstManager.GetComponentData<WagonComponentData>(wagonEntity);
-                comp.TrainEntity = trainEntity;
-                comp.Index = i;
-            }
-        }
     }
 
     #endregion ------------------------ GIZMOS >

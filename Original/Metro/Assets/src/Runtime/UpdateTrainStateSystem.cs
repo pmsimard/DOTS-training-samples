@@ -15,9 +15,9 @@ public class UpdateTrainStateSystem : JobComponentSystem
         [ReadOnly] ref LoopingData loopingData,
         [ReadOnly] ref SpeedManagementData speedData)
         {
-            var dt = UnityEngine.Time.deltaTime;
+            var dt = DeltaTime;
             var accelStateIndex = loopingData.PathIndex;
-            var accelStatesBuffer = MetroLinesAccelStateBuffers[loopingData.RailEntity];
+            var accelStatesBuffer = MetroLinesAccelStateBuffers[trainData.RailEntity];
             var isAccellerating = accelStatesBuffer[accelStateIndex] == 1.0f;
 
             switch (trainData.State)
