@@ -7,8 +7,10 @@ using Unity.Mathematics;
 [GenerateAuthoringComponent]
 public struct SpeedManagementData : IComponentData
 {
+    public const float DefaultMinSpeed = 1.0f; // 1 m/s
     public const float DefaultMaxSpeed = 21.0f; // 21 m/s OT 75 km/h
 
+    public float MinSpeed;
     public float MaxSpeed;
     public float CurrentSpeed;
     public float Acceleration;

@@ -38,7 +38,8 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     {
                         if (wasAccellerating && isDescellerating)
                         {
-                            Debug.Log("========== Going to Arriving");
+                            Debug.Log($"========== Going to Arriving");
+                            speedData.MinSpeed = 5.0f;
                             trainData.State = TrainState.Arriving;
                         }
                     }
@@ -50,6 +51,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     {
                         Debug.Log("========== Going to a Stop");
                         speedData.CurrentSpeed = 0.0f;
+                        speedData.MinSpeed = 0.0f;
                         speedData.MaxSpeed = 0.0f;
                         trainData.State = TrainState.Stopped;
                     }
@@ -57,6 +59,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
                 case TrainState.Stopped:
                     // Delay train arrival
                     trainData.WaitTimer -= dt;
+                    Debug.Log($"========== Waiting speed: {speedData.CurrentSpeed}");
                     if (trainData.WaitTimer <= 0.0f)
                     {
                         trainData.WaitTimer = TrainComponentData.WaitTimerInitialValue;
@@ -132,6 +135,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     speedData.Acceleration = trainSpeedData.Acceleration;
                     speedData.CurrentSpeed = trainSpeedData.CurrentSpeed;
                     speedData.MaxSpeed = trainSpeedData.MaxSpeed;
+                    speedData.MinSpeed = trainSpeedData.MinSpeed;
                     allTrainsSpeedData[entity] = speedData;
                 }
             }).Schedule(jobHandle);

@@ -438,8 +438,8 @@ public class MetroLine
 
             dstManager.SetComponentData(wagonEntity, new Translation { Value = BakedPositionPath[position-1] });
             dstManager.SetComponentData(wagonEntity, new Rotation { Value = quaternion.LookRotation(BakedNormalPath[position], math.up()) });
-            dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 10f, CurrentSpeed = 0, MaxSpeed = SpeedManagementData.DefaultMaxSpeed });
-            dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = j });
+            dstManager.AddComponentData(wagonEntity, new SpeedManagementData { NeedsAccelleration = isLocomotive, Acceleration = 30f, CurrentSpeed = 0, MinSpeed = SpeedManagementData.DefaultMinSpeed, MaxSpeed = SpeedManagementData.DefaultMaxSpeed });
+            dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = j, TrainEntity = locomotiveEntity });
 
             dstManager.AddComponentData(wagonEntity, new TargetData { Target = BakedPositionPath[position] });
             dstManager.AddComponentData(wagonEntity, new LoopingData { RailEntity = railEntity, PathIndex = position });
