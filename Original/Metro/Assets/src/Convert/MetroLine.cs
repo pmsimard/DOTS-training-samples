@@ -23,6 +23,7 @@ public class MetroLine
     public float speedRatio;
     public float carriageLength_onRail;
 
+    public float AverageSampleDistance = 0f; 
     public NativeArray<MetroLinePositionElement> BakedPositionPath;
     public NativeArray<MetroLineNormalElement> BakedNormalPath;
     public NativeArray<MetroLineAccelerationStateElement> BakedAccelPath;
@@ -193,13 +194,19 @@ public class MetroLine
         PlatformPositions = new List<float3>(isPlatformPosition.Count);
         PlatformNormals = new List<float3>(isPlatformPosition.Count);
 
-        Vector3 platformEndPos = Vector3.zero;
+        float3 platformEndPos = float3.zero;
+        AverageSampleDistance = 0f;
 
         while (_DIST < bezierPath.GetPathDistance())
         {
             float _DIST_AS_RAIL_FACTOR = Get_distanceAsRailProportion(_DIST);
-            Vector3 _RAIL_POS = Get_PositionOnRail(_DIST_AS_RAIL_FACTOR);
-            Vector3 _RAIL_ROT = Get_RotationOnRail(_DIST_AS_RAIL_FACTOR);
+            float3 _RAIL_POS = Get_PositionOnRail(_DIST_AS_RAIL_FACTOR);
+            float3 _RAIL_ROT = Get_RotationOnRail(_DIST_AS_RAIL_FACTOR);
+
+            if (pos.Count > 0)
+            {
+                AverageSampleDistance += math.distance(pos[pos.Count - 1].Value, _RAIL_POS);
+            }
 
             if (_DIST >= pointDistance)
             {
@@ -241,6 +248,8 @@ public class MetroLine
             //_RAIL.transform.LookAt(_RAIL_POS - _RAIL_ROT);
             _DIST += Metro.RAIL_SPACING;
         }
+
+        AverageSampleDistance /= pos.Count;
 
         BakedPositionPath = new NativeArray<MetroLinePositionElement>(pos.ToArray(), Allocator.Persistent);
         BakedNormalPath = new NativeArray<MetroLineNormalElement>(normals.ToArray(), Allocator.Persistent);
@@ -313,7 +322,9 @@ public class MetroLine
                 new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
         }
 
+        int wagonSampleIndexSpacing = (int) ((5f / AverageSampleDistance) + 0.5f);
         var wagonPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(wagonPrefab, conversionSettings);
+
         var platformPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(platformPrefab, conversionSettings);
         for (int i = 0; i < Platforms.Count; ++i)
         {
@@ -328,7 +339,7 @@ public class MetroLine
             dstManager.SetComponentData(platformEntity,
                 new Rotation { Value = quaternion.LookRotation(PlatformNormals[i], math.up()) });
 
-            var trainEntity = GenerateTrain(dstManager, platformData, wagonPrefabEntity, desiredWagonCount: 5);
+            GenerateTrain(dstManager, platformData, wagonPrefabEntity, desiredWagonCount: 5);
         }
 
         if (BakedPositionPath.IsCreated)
@@ -387,14 +398,15 @@ public class MetroLine
                 dstManager.AddComponentData(wagonEntity, trainData);
             }
                 
-            dstManager.SetComponentData(wagonEntity, new Translation { Value = BakedPositionPath[platformData.RailSampleIndex] });
-            dstManager.SetComponentData(wagonEntity,
-                new Rotation { Value = quaternion.LookRotation(BakedNormalPath[platformData.RailSampleIndex], math.up()) });
+            int position = (platformData.RailSampleIndex + wagonSampleIndexSpacing * j) % BakedPositionPath.Length;
+
+            dstManager.SetComponentData(wagonEntity, new Translation { Value = BakedPositionPath[position-1] });
+            dstManager.SetComponentData(wagonEntity, new Rotation { Value = quaternion.LookRotation(BakedNormalPath[position], math.up()) });
             dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 30f, CurrentSpeed = 0, MaxSpeed = 300f });
-            dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = metroLine_index });
-            int position = (platformData.RailSampleIndex + 1 + j) % BakedPositionPath.Length;
+            dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = j });
+
             dstManager.AddComponentData(wagonEntity, new TargetData { Target = BakedPositionPath[position] });
-            dstManager.AddComponentData(wagonEntity, new LoopingData { RailEntity = railEntity, PathIndex = position });
+            dstManager.AddComponentData(wagonEntity, new LoopingData { RailEntity = entity, PathIndex = position });
         }
 
         return wagonEntities;
