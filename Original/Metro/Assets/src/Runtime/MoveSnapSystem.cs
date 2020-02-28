@@ -40,6 +40,7 @@ public class MoveSnapSystem : JobComponentSystem
             else
             {
                 translation.Value = translation.Value + direction * DeltaTime * speedManagementData.CurrentSpeed;
+                rotation.Value = Unity.Mathematics.quaternion.LookRotation(direction, math.up());
             }
         }
     }
