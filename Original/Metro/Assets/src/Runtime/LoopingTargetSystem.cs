@@ -37,6 +37,7 @@ public class LoopingTarget : JobComponentSystem
 
             while (distance < speed.CurrentSpeed * DeltaTime)
             {
+                loopingData.PreviousPathIndex = loopingData.PathIndex;
                 loopingData.PathIndex = (loopingData.PathIndex + 1) % targetPositions.Length;
                 target.Target = targetPositions[loopingData.PathIndex];
 

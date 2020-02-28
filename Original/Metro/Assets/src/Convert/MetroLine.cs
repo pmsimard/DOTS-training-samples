@@ -379,7 +379,8 @@ public class MetroLine
 
         int wagonSampleIndexSpacing = (int)((5f / AverageSampleDistance) + 0.5f);
         var wagonEntities = new List<Entity>(desiredWagonCount);
-        var railEntity = platformData.RailEntity;       
+        var railEntity = platformData.RailEntity;
+        Entity locomotiveEntity = Entity.Null;
 
         // Spawn train wagons
         for (int j = 0; j < desiredWagonCount; ++j)
@@ -390,6 +391,8 @@ public class MetroLine
             // Only on locomotive (first wagon) do we attach TrainComponentData
             if (j == 0)
             {
+                locomotiveEntity = wagonEntity;
+
                 var trainData = new TrainComponentData
                 {
                     State = TrainState.InTransit,
@@ -400,13 +403,13 @@ public class MetroLine
 
                 dstManager.AddComponentData(wagonEntity, trainData);
             }
-                
+
             int position = (platformData.RailSampleIndex + wagonSampleIndexSpacing * j) % BakedPositionPath.Length;
 
             dstManager.SetComponentData(wagonEntity, new Translation { Value = BakedPositionPath[position-1] });
             dstManager.SetComponentData(wagonEntity, new Rotation { Value = quaternion.LookRotation(BakedNormalPath[position], math.up()) });
-            dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 30f, CurrentSpeed = 0, MaxSpeed = 300f });
-            dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = j });
+            dstManager.AddComponentData(wagonEntity, new SpeedManagementData { Acceleration = 30f, CurrentSpeed = 0, MaxSpeed = SpeedManagementData.DefaultMaxSpeed });
+            dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = j, TrainEntity = locomotiveEntity });
 
             dstManager.AddComponentData(wagonEntity, new TargetData { Target = BakedPositionPath[position] });
             dstManager.AddComponentData(wagonEntity, new LoopingData { RailEntity = railEntity, PathIndex = position });

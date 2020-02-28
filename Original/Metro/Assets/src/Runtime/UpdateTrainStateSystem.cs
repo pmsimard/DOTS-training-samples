@@ -6,7 +6,7 @@ using UnityEngine;
 public class UpdateTrainStateSystem : JobComponentSystem
 {
     //[BurstCompile]
-    struct LoopingTargetJob : IJobForEach<TrainComponentData, LoopingData, SpeedManagementData>
+    struct UpdateTrainStateJob : IJobForEach<TrainComponentData, LoopingData, SpeedManagementData>
     {
         [ReadOnly] public float DeltaTime;
         [ReadOnly] public BufferFromEntity<MetroLineAccelerationStateElement> MetroLinesAccelStateBuffers;
@@ -17,26 +17,35 @@ public class UpdateTrainStateSystem : JobComponentSystem
         [ReadOnly] ref SpeedManagementData speedData)
         {
             var dt = DeltaTime;
+            var prevAccelStateIndex = loopingData.PreviousPathIndex;
             var accelStateIndex = loopingData.PathIndex;
             var accelStatesBuffer = MetroLinesAccelStateBuffers[trainData.RailEntity];
-            var isAccellerating = accelStatesBuffer[accelStateIndex] == 1.0f;
+
+            bool wasAccellerating = accelStatesBuffer[prevAccelStateIndex] == 1.0f;
+            bool isDescellerating = accelStatesBuffer[accelStateIndex] == -1.0f;
 
 
             switch (trainData.State)
             {
                 case TrainState.InTransit:
                     {
-                        bool isAtMaxSpeed = speedData.CurrentSpeed == speedData.MaxSpeed;
-
-                        if (isAtMaxSpeed && !isAccellerating)
+                        if (wasAccellerating && isDescellerating)
+                        {
+                            Debug.Log("========== Going to Arriving");
                             trainData.State = TrainState.Arriving;
+                        }
                     }
                     break;
                 case TrainState.Arriving:
-                    // If we're arriving (decellarating) and we need to acccellarate
+                    // If we're arriving (descellarating) and we need to accellarate
                     // it means we need to stop first
-                    if (isAccellerating)
+                    if (!wasAccellerating && !isDescellerating)
+                    {
+                        Debug.Log("========== Going to a Stop");
+                        speedData.CurrentSpeed = 0.0f;
+                        speedData.MaxSpeed = 0.0f;
                         trainData.State = TrainState.Stopped;
+                    }
                     break;
                 case TrainState.Stopped:
                     // Delay train arrival
@@ -44,8 +53,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     if (trainData.WaitTimer <= 0.0f)
                     {
                         trainData.WaitTimer = TrainComponentData.WaitTimerInitialValue;
-                        trainData.State = TrainState.InTransit;
-                        //speedData.CurrentSpeed = 0;
+                        trainData.State = TrainState.OpeningDoors;
                     }
                     break;
                 case TrainState.OpeningDoors:
@@ -72,7 +80,7 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     if (trainData.DoorMoveTimer <= 0.0f)
                     {
                         trainData.DoorMoveTimer = TrainComponentData.DoorMoveTimerInitialValue;
-                        trainData.State = TrainState.InTransit;
+                        trainData.State = TrainState.DoorsClosed;
                     }
                     break;
                 case TrainState.DoorsClosed:
@@ -80,7 +88,9 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     trainData.WaitTimer -= dt;
                     if (trainData.WaitTimer <= 0.0f)
                     {
+                        Debug.Log($"========== Train is Departing with accellaration {speedData.Acceleration}");
                         trainData.WaitTimer = TrainComponentData.WaitTimerInitialValue;
+                        speedData.MaxSpeed = SpeedManagementData.DefaultMaxSpeed;
                         trainData.State = TrainState.InTransit;
                     }
                     break;
@@ -89,12 +99,15 @@ public class UpdateTrainStateSystem : JobComponentSystem
                     break;
             }
         }
+    }
 
+    struct UpdateEntireTrainSpeedJob : IJobForEach<TrainComponentData, LoopingData, SpeedManagementData>
+    {
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
-        var job = new LoopingTargetJob()
+        var job = new UpdateTrainStateJob()
         {
             DeltaTime = UnityEngine.Time.deltaTime,
             MetroLinesAccelStateBuffers = GetBufferFromEntity<MetroLineAccelerationStateElement>()
@@ -102,6 +115,17 @@ public class UpdateTrainStateSystem : JobComponentSystem
 
         JobHandle jobHandle = job.Schedule(this, inputDependencies);
         jobHandle.Complete();
+
+        var allTrainsSpeedData = GetComponentDataFromEntity<SpeedManagementData>(isReadOnly: true);
+
+        Entities
+            .WithNone<TrainComponentData>()
+            .WithReadOnly(allTrainsSpeedData)
+            .ForEach((ref WagonComponentData wagonData, ref SpeedManagementData speedData) => {
+                var trainSpeedData = allTrainsSpeedData[wagonData.TrainEntity];
+                speedData.CurrentSpeed = trainSpeedData.CurrentSpeed;
+                speedData.MaxSpeed = trainSpeedData.MaxSpeed;
+            });
 
         // Needs to happen after the job
         EntityQuery targetReachedQuery = GetEntityQuery(typeof(TargetReached));
