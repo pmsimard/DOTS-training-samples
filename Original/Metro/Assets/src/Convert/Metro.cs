@@ -26,6 +26,8 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
     public GameObject prefab_commuter;
     [Tooltip("prefabs/Rail")]
     public GameObject prefab_rail;
+    [Tooltip("prefabs/Rail_Accel")]
+    public GameObject prefab_rail_accel;
     [Tooltip("Draw rail paths (eats CPU)")]
     public bool drawRailBeziers = false;
     [Tooltip("Number of commuters to spawn at the start")]
@@ -152,7 +154,7 @@ public class Metro : MonoBehaviour, IConvertGameObjectToEntity
         for (int i = 0; i < metroLines.Length; i++)
         {
             var line = metroLines[i];
-            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail, prefab_platform, prefab_trainCarriage);
+            var lineEntity = line.Convert(entity, dstManager, parentGo, prefab_rail, prefab_rail_accel, prefab_platform, prefab_trainCarriage);
 
             for (int trainIndex = 0; trainIndex < 5; ++trainIndex)
             {

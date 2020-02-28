@@ -296,7 +296,7 @@ public class MetroLine
     }
 
     public Entity Convert(Entity parentEntity, EntityManager dstManager,
-            GameObject parentGO, GameObject prefabRail, GameObject platformPrefab, GameObject wagonPrefab)
+            GameObject parentGO, GameObject prefabRail, GameObject prefabRailAccel, GameObject platformPrefab, GameObject wagonPrefab)
     {
         var railEntity = dstManager.CreateEntity();     
         var elemCount = BakedPositionPath.Length;
@@ -310,10 +310,12 @@ public class MetroLine
 
         var conversionSettings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
         var railTrackPartPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(prefabRail, conversionSettings);
+        var railAccelTrackPartPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(prefabRailAccel, conversionSettings);
 
         for (int i = 0; i < elemCount; ++i)
         {
-            var railTrackPartPrefabInstanceEntity = dstManager.Instantiate(railTrackPartPrefabEntity);
+            var railPrefabEntity = BakedAccelPath[i].Value == 1.0f ? railAccelTrackPartPrefabEntity : railTrackPartPrefabEntity;
+            var railTrackPartPrefabInstanceEntity = dstManager.Instantiate(railPrefabEntity);
 
             dstManager.SetComponentData(railTrackPartPrefabInstanceEntity,
                 new Translation { Value = BakedPositionPath[i] });
@@ -390,6 +392,7 @@ public class MetroLine
             {
                 var trainData = new TrainComponentData
                 {
+                    State = TrainState.InTransit,
                     RailEntity = railEntity,
                     DoorMoveTimer = TrainComponentData.DoorMoveTimerInitialValue,
                     WaitTimer = TrainComponentData.WaitTimerInitialValue

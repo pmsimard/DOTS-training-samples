@@ -205,6 +205,12 @@ PrefabInstance:
       propertyPath: maxCommuters
       value: 1000
       objectReference: {fileID: 0}
+    - target: {fileID: 114014868198753854, guid: 8ca719e9d16104f78ba3feaa2aea2c96,
+        type: 3}
+      propertyPath: prefab_rail_accel
+      value: 
+      objectReference: {fileID: 1004504532206030, guid: 25119c3c14bc4474385b05076d8f49c1,
+        type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8ca719e9d16104f78ba3feaa2aea2c96, type: 3}
 --- !u!1 &445682863

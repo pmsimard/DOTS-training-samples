@@ -5,7 +5,6 @@ using Unity.Entities;
 
 public enum TrainState
 {
-    Departing,
     Arriving,
     Stopped,
     OpeningDoors,
