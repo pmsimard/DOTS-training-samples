@@ -322,7 +322,6 @@ public class MetroLine
                 new Rotation { Value = quaternion.LookRotation(BakedNormalPath[i], new float3(0.0f, 1.0f, 0.0f)) });
         }
 
-        int wagonSampleIndexSpacing = (int) ((5f / AverageSampleDistance) + 0.5f);
         var wagonPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(wagonPrefab, conversionSettings);
 
         var platformPrefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(platformPrefab, conversionSettings);
@@ -376,6 +375,7 @@ public class MetroLine
             throw new System.ArgumentException("A train must have a least 1 wagon!", nameof(desiredWagonCount));
         }
 
+        int wagonSampleIndexSpacing = (int)((5f / AverageSampleDistance) + 0.5f);
         var wagonEntities = new List<Entity>(desiredWagonCount);
         var railEntity = platformData.RailEntity;       
 
@@ -406,7 +406,7 @@ public class MetroLine
             dstManager.AddComponentData(wagonEntity, new WagonComponentData { Index = j });
 
             dstManager.AddComponentData(wagonEntity, new TargetData { Target = BakedPositionPath[position] });
-            dstManager.AddComponentData(wagonEntity, new LoopingData { RailEntity = entity, PathIndex = position });
+            dstManager.AddComponentData(wagonEntity, new LoopingData { RailEntity = railEntity, PathIndex = position });
         }
 
         return wagonEntities;
