@@ -24,10 +24,9 @@ public class CommuterSpawner : JobComponentSystem
         // Schedule the Entities.ForEach lambda job that will add Instantiate commands to the EntityCommandBuffer.
         // Since this job only runs on the first frame, we want to ensure Burst compiles it before running to get the best performance (3rd parameter of WithBurst)
         // The actual job will be cached once it is compiled (it will only get Burst compiled once).
-        JobHandle handle = Entities.ForEach((Entity entity, int entityInQueryIndex, ref TrainCarriageSpawnerData spawnerFromEntity, ref LocalToWorld location) =>
+
+        JobHandle handle = Entities.ForEach((Entity entity, int entityInQueryIndex, ref CommuterSpawnerData spawnerFromEntity, ref LocalToWorld location) =>
         {
-
-
             /*for (int i = 0; i < spawnerFromEntity.WagonPerLine; i++)
             {
                 Entity instance = commandBuffer.Instantiate(entityInQueryIndex, spawnerFromEntity.Prefab);
