@@ -399,7 +399,6 @@ public class MetroLine
 
         int wagonSampleIndexSpacing = (int)((5f / AverageSampleDistance) + 0.5f);
         var wagonEntities = new List<Entity>(desiredWagonCount);
-        var railEntity = platformData.RailEntity;
         Entity locomotiveEntity = Entity.Null;
 
         // Spawn train wagons
